@@ -11,7 +11,7 @@ interface Props {
 const { title, summary, date, href, tags = [], readingTime } = Astro.props;
 ---
 
-<article class="article-card">
+<article class="article-card motion-card">
 	<p class="meta-line">
 		发布日期：{date}
 		{readingTime && <> · 预计阅读 {readingTime} 分钟</>}

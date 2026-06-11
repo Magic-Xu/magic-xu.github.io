@@ -14,16 +14,37 @@ export async function getStaticPaths() {
 }
 
 const { post } = Astro.props as { post: CollectionEntry<"blog"> };
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
+const tocItems = [
+	{ depth: 1, slug: "article-top", text: post.data.title },
+	...headings
+		.filter((heading) => heading.depth > 1 && heading.depth <= 3)
+		.map((heading) => ({
+			depth: heading.depth,
+			slug: heading.slug,
+			text: heading.text
+		}))
+];
 ---
 
 <BaseLayout>
-	<section class="section">
-		<div class="container article-shell">
-			<a class="text-link back-link" href="/writing/">返回 Writing</a>
+	<section class="section article-section">
+		<div class="container article-layout">
+			<aside class="article-toc" aria-label="文章目录">
+				<a class="toc-back" href="/writing/">返回 Writing</a>
+				<p class="toc-label">目录</p>
+				<nav>
+					{tocItems.map((item) => (
+						<a class={`toc-link toc-depth-${item.depth}`} href={`#${item.slug}`}>
+							{item.text}
+						</a>
+					))}
+				</nav>
+			</aside>
 
-			<article class="article-detail">
+			<article id="article-top" class="article-detail">
 				<header class="article-header">
+					<a class="text-link back-link" href="/writing/">返回 Writing</a>
 					<h1 class="page-title">{post.data.title}</h1>
 					<p class="meta-line">
 						发布日期：{formatPubDate(post.data.pubDate)}

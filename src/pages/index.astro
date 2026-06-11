@@ -4,28 +4,73 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
 const content = getLocaleContent();
 const { home } = content;
+const featuredProject = content.projects.items.find((project) => project.name === "SnapMosaic");
 ---
 
 <BaseLayout>
 	<section class="section home-hero">
-		<div class="container home-copy">
-			<h1>{home.title}</h1>
-			<p class="home-subtitle">{home.subtitle}</p>
-			<p class="home-slogan">{home.slogan}</p>
-			<p class="home-intro">{home.intro}</p>
-
-			<div class="action-row" aria-label="首页快捷入口">
-				{home.actions.map((action) => (
-					<a
-						class={action.variant === "primary" ? "button primary" : "button secondary"}
-						href={action.href}
-						target={action.external ? "_blank" : undefined}
-						rel={action.external ? "noreferrer" : undefined}
-					>
-						{action.label}
-					</a>
-				))}
+		<div class="hero-code-scene" aria-hidden="true">
+			<div class="code-window primary">
+				<span>state.reduce(intent)</span>
+				<span>Effect.launch(scope)</span>
+				<span>render(model)</span>
 			</div>
+			<div class="code-window secondary">
+				<span>AI.observe(input)</span>
+				<span>ship.small()</span>
+			</div>
+			<div class="signal-line one"></div>
+			<div class="signal-line two"></div>
+		</div>
+		<div class="container home-grid">
+			<div class="home-copy">
+				<p class="hero-kicker">BUILDING MOBILE PRODUCTS WITH CARE</p>
+				<h1>{home.title}</h1>
+				<p class="home-subtitle">{home.subtitle}</p>
+				<p class="home-slogan">{home.slogan}</p>
+				<p class="home-intro">{home.intro}</p>
+
+				<div class="action-row" aria-label="首页快捷入口">
+					{home.actions.map((action) => (
+						<a
+							class={action.variant === "primary" ? "button primary" : "button secondary"}
+							href={action.href}
+							target={action.external ? "_blank" : undefined}
+							rel={action.external ? "noreferrer" : undefined}
+						>
+							{action.label}
+						</a>
+					))}
+				</div>
+			</div>
+			{featuredProject && (
+				<aside class="featured-product motion-card" aria-label="Featured project">
+					<div class="product-topbar">
+						<span></span>
+						<span></span>
+						<span></span>
+					</div>
+					<p class="product-label">Featured Product</p>
+					<h2>{featuredProject.name}</h2>
+					<p class="product-tagline">{featuredProject.tagline}</p>
+					<p>{featuredProject.description}</p>
+					<div class="privacy-grid" aria-label="SnapMosaic features">
+						<span>Local-first</span>
+						<span>Mosaic</span>
+						<span>Blur</span>
+						<span>Block</span>
+						<span>No account</span>
+						<span>System share</span>
+					</div>
+					<div class="project-links">
+						{featuredProject.links?.map((item) => (
+							<a class="text-link" href={item.href} target="_blank" rel="noreferrer">
+								{item.label}
+							</a>
+						))}
+					</div>
+				</aside>
+			)}
 		</div>
 	</section>
 </BaseLayout>

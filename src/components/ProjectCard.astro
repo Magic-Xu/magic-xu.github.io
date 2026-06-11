@@ -4,24 +4,38 @@ interface Props {
 	description: string;
 	status: string;
 	stack: string[];
-	linkLabel: string;
-	linkHref: string;
+	tagline?: string;
+	theme?: "dark" | "light";
+	linkLabel?: string;
+	linkHref?: string;
+	links?: {
+		label: string;
+		href: string;
+	}[];
 }
 
-const { name, description, status, stack, linkLabel, linkHref } = Astro.props;
-const isExternal = linkHref.startsWith("http");
+const { name, description, status, stack, tagline, theme = "light", linkLabel, linkHref, links } = Astro.props;
+const projectLinks = links ?? (linkHref && linkLabel ? [{ label: linkLabel, href: linkHref }] : []);
 ---
 
-<article class="project-card">
+<article class={`project-card project-card-${theme} motion-card`}>
 	<header class="project-card-head">
 		<h3>{name}</h3>
 		<span class="status-chip">{status}</span>
 	</header>
+	{tagline && <p class="project-tagline">{tagline}</p>}
 	<p>{description}</p>
 	<ul class="stack-list" aria-label="技术栈">
 		{stack.map((item) => <li>{item}</li>)}
 	</ul>
-	<a class="text-link" href={linkHref} target={isExternal ? "_blank" : undefined} rel={isExternal ? "noreferrer" : undefined}>
-		{linkLabel}
-	</a>
+	<div class="project-links">
+		{projectLinks.map((item) => {
+			const isExternal = item.href.startsWith("http");
+			return (
+				<a class="text-link" href={item.href} target={isExternal ? "_blank" : undefined} rel={isExternal ? "noreferrer" : undefined}>
+					{item.label}
+				</a>
+			);
+		})}
+	</div>
 </article>

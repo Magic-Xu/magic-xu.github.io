@@ -9,7 +9,7 @@ const links = content.navigation;
 const isActive = (href: string) => pathname === href;
 ---
 
-<header class="site-header">
+<header class="site-header" transition:persist>
 	<div class="container header-inner">
 		<a class="site-brand" href="/">{siteConfig.title}</a>
 		<nav class="site-nav" aria-label="主导航">

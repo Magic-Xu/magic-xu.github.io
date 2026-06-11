@@ -29,8 +29,18 @@ export const zhCN: LocaleContent = {
 		description:
 			"我是 MagicXu，长期专注 Android 工程实践，同时在 AI 产品方向持续探索。偏好用工程方法解决真实问题，并把结果打磨成可交付的产品。",
 		summaryTitle: "简介",
+		workTitle: "工作经历",
 		keywordsTitle: "技术关键词",
 		focusTitle: "当前关注",
+		work: {
+			companies: [
+				{ name: "字节跳动", logo: "/company-icons/bytedance.png" },
+				{ name: "腾讯 Tencent", logo: "/company-icons/tencent.ico" },
+				{ name: "拼多多", logo: "/company-icons/pinduoduo.png", variant: "app" },
+				{ name: "OPPO", logo: "/company-icons/oppo.ico" },
+				{ name: "乐逗游戏", logo: "/company-icons/ledou-icon.png" }
+			]
+		},
 		keywords: [
 			"Android 原生开发",
 			"Kotlin / Java",
@@ -51,6 +61,20 @@ export const zhCN: LocaleContent = {
 		description: "进行中的项目、实验和长期迭代方向。",
 		items: [
 			{
+				name: "SnapMosaic",
+				status: "已上线 / 迭代中",
+				tagline: "Private photo masking, on device.",
+				description:
+					"A local-first privacy image editor for quickly masking faces, names, license plates, receipts, screenshots, and other sensitive details before sharing.",
+				stack: ["Android", "Privacy", "Local-first", "Product Design"],
+				theme: "dark",
+				links: [
+					{ label: "Website", href: "https://magic-xu.github.io/mosaic-legal/" },
+					{ label: "Google Play", href: "https://play.google.com/store/apps/details?id=com.magic.snapmosaic" },
+					{ label: "X / Twitter", href: "https://x.com/snapmosaic_app" }
+				]
+			},
+			{
 				name: "Pulse",
 				status: "进行中",
 				description:
@@ -61,21 +85,12 @@ export const zhCN: LocaleContent = {
 			},
 			{
 				name: "Personal Site",
-				status: "进行中",
+				status: "已结项",
 				description:
 					"一个基于 Astro 搭建的轻量个人站，用于沉淀项目、写作与长期个人表达。",
 				stack: ["Astro", "GitHub Pages", "CSS"],
 				linkHref: "#",
 				linkLabel: "查看站点"
-			},
-			{
-				name: "AI Pet Mood",
-				status: "探索中",
-				description:
-					"一个面向宠物场景的 AI 趣味产品尝试，关注图像理解、情绪表达与轻量交互体验。",
-				stack: ["Android", "AI", "Product Design"],
-				linkHref: "#",
-				linkLabel: "了解项目"
 			}
 		]
 	},

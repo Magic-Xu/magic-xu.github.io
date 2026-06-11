@@ -16,6 +16,20 @@ const { about } = content;
 				<p class="page-desc">{about.description}</p>
 			</section>
 
+			<section class="content-block" aria-labelledby="about-work">
+				<h2 id="about-work">{about.workTitle}</h2>
+				<div class="company-wall" aria-label="工作经历公司">
+					{about.work.companies.map((company) => (
+						<div class:list={["company-logo-card", company.variant && `company-logo-${company.variant}`]}>
+							<div class="company-logo-frame">
+								<img src={company.logo} alt={`${company.name} icon`} loading="lazy" />
+							</div>
+							<p>{company.name}</p>
+						</div>
+					))}
+				</div>
+			</section>
+
 			<section class="content-block" aria-labelledby="about-keywords">
 				<h2 id="about-keywords">{about.keywordsTitle}</h2>
 				<ul class="info-list">
