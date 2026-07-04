@@ -75,6 +75,23 @@ export const zhCN: LocaleContent = {
 				]
 			},
 			{
+				name: "MeloNest",
+				status: "开发中",
+				tagline: "AI music generation, kept in your local library.",
+				description:
+					"一个面向 AI 音乐生成与本地导入播放的轻量音乐 App，围绕生成、导入、本地曲库、播放与导出形成最小闭环。",
+				stack: ["Kotlin", "Android", "Jetpack Compose", "AI Music", "Local-first"]
+			},
+			{
+				name: "App Dev Skills",
+				status: "开源 / 维护中",
+				description:
+					"一套从独立 App 开发实践中沉淀的 Codex skills，覆盖 local-first Android App 启动、架构守护、设备 QA 和 GitHub 发布流程。",
+				stack: ["Codex Skills", "Android", "MVI", "Jetpack Compose", "Workflow"],
+				linkHref: "https://github.com/Magic-Xu/app-dev-skills",
+				linkLabel: "查看项目"
+			},
+			{
 				name: "Pulse",
 				status: "进行中",
 				description:
@@ -82,15 +99,6 @@ export const zhCN: LocaleContent = {
 				stack: ["Kotlin", "Android", "MVI", "Jetpack"],
 				linkHref: "https://github.com/Magic-Xu/pulse",
 				linkLabel: "查看项目"
-			},
-			{
-				name: "Personal Site",
-				status: "已结项",
-				description:
-					"一个基于 Astro 搭建的轻量个人站，用于沉淀项目、写作与长期个人表达。",
-				stack: ["Astro", "GitHub Pages", "CSS"],
-				linkHref: "#",
-				linkLabel: "查看站点"
 			}
 		]
 	},
