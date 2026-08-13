@@ -6,23 +6,24 @@ const content = getLocaleContent();
 const { about } = content;
 ---
 
-<BaseLayout>
-	<section class="section">
+<BaseLayout metaTitle={about.metaTitle} metaDescription={about.metaDescription}>
+	<section class="section about-section">
 		<div class="container">
-			<h1 class="page-title">{about.title}</h1>
+			<header class="about-intro" data-reveal-group>
+				<h1 class="page-title about-title">{about.title}</h1>
+				<section aria-labelledby="about-summary">
+					<h2 id="about-summary">{about.summaryTitle}</h2>
+					<p class="page-desc">{about.description}</p>
+				</section>
+			</header>
 
-			<section class="content-block" aria-labelledby="about-summary">
-				<h2 id="about-summary">{about.summaryTitle}</h2>
-				<p class="page-desc">{about.description}</p>
-			</section>
-
-			<section class="content-block" aria-labelledby="about-work">
+			<section class="about-block work-block" aria-labelledby="about-work">
 				<h2 id="about-work">{about.workTitle}</h2>
 				<div class="company-wall" aria-label="工作经历公司">
 					{about.work.companies.map((company) => (
-						<div class:list={["company-logo-card", company.variant && `company-logo-${company.variant}`]}>
+						<div class:list={["company-item", company.variant && `company-logo-${company.variant}`]}>
 							<div class="company-logo-frame">
-								<img src={company.logo} alt={`${company.name} icon`} loading="lazy" />
+								<img src={company.logo} alt={`${company.name} icon`} />
 							</div>
 							<p>{company.name}</p>
 						</div>
@@ -30,16 +31,16 @@ const { about } = content;
 				</div>
 			</section>
 
-			<section class="content-block" aria-labelledby="about-keywords">
+			<section class="about-block" aria-labelledby="about-keywords">
 				<h2 id="about-keywords">{about.keywordsTitle}</h2>
-				<ul class="info-list">
+				<ul class="info-list keyword-list">
 					{about.keywords.map((keyword) => <li>{keyword}</li>)}
 				</ul>
 			</section>
 
-			<section class="content-block" aria-labelledby="about-focuses">
+			<section class="about-block" aria-labelledby="about-focuses">
 				<h2 id="about-focuses">{about.focusTitle}</h2>
-				<ul class="info-list">
+				<ul class="info-list focus-list">
 					{about.focuses.map((focus) => <li>{focus}</li>)}
 				</ul>
 			</section>

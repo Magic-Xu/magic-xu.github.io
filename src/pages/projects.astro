@@ -7,13 +7,15 @@ const content = getLocaleContent();
 const { projects } = content;
 ---
 
-<BaseLayout>
-	<section class="section">
+<BaseLayout metaTitle={projects.metaTitle} metaDescription={projects.metaDescription}>
+	<section class="section projects-section">
 		<div class="container">
-			<h1 class="page-title">{projects.title}</h1>
-			<p class="page-desc">{projects.description}</p>
-			<div class="card-grid">
-				{projects.items.map((project) => <ProjectCard {...project} />)}
+			<header class="page-heading" data-reveal-group>
+				<h1 class="page-title">{projects.title}</h1>
+				<p class="page-desc">{projects.description}</p>
+			</header>
+			<div class="project-index">
+				{projects.items.map((project, index) => <ProjectCard {...project} index={index + 1} featured={index === 0} />)}
 			</div>
 		</div>
 	</section>

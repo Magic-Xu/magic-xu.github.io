@@ -6,57 +6,44 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
 export async function getStaticPaths() {
 	const posts = await getPublishedPosts();
-
-	return posts.map((post) => ({
-		params: { slug: post.id },
-		props: { post }
-	}));
+	return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
 }
 
 const { post } = Astro.props as { post: CollectionEntry<"blog"> };
 const { Content, headings } = await render(post);
-const tocItems = [
-	{ depth: 1, slug: "article-top", text: post.data.title },
-	...headings
-		.filter((heading) => heading.depth > 1 && heading.depth <= 3)
-		.map((heading) => ({
-			depth: heading.depth,
-			slug: heading.slug,
-			text: heading.text
-		}))
-];
+const tocItems = headings
+	.filter((heading) => heading.depth === 2)
+	.map((heading) => ({ depth: heading.depth, slug: heading.slug, text: heading.text }));
 ---
 
-<BaseLayout>
+<BaseLayout metaTitle={post.data.title} metaDescription={post.data.description}>
 	<section class="section article-section">
 		<div class="container article-layout">
 			<aside class="article-toc" aria-label="文章目录">
-				<a class="toc-back" href="/writing/">返回 Writing</a>
+				<a class="toc-back" href="/writing/"><span aria-hidden="true">←</span> 返回 Writing</a>
 				<p class="toc-label">目录</p>
 				<nav>
-					{tocItems.map((item) => (
-						<a class={`toc-link toc-depth-${item.depth}`} href={`#${item.slug}`}>
-							{item.text}
-						</a>
-					))}
+					{tocItems.map((item) => <a class={`toc-link toc-depth-${item.depth}`} href={`#${item.slug}`}>{item.text}</a>)}
 				</nav>
 			</aside>
 
 			<article id="article-top" class="article-detail">
-				<header class="article-header">
-					<a class="text-link back-link" href="/writing/">返回 Writing</a>
+				<header class="article-header" data-reveal-group>
+					<a class="text-link back-link" href="/writing/"><span aria-hidden="true">←</span> 返回 Writing</a>
 					<h1 class="page-title">{post.data.title}</h1>
 					<p class="meta-line">
-						发布日期：{formatPubDate(post.data.pubDate)}
+						{formatPubDate(post.data.pubDate)}
 						{post.data.readingTime && <> · 预计阅读 {post.data.readingTime} 分钟</>}
 					</p>
 					{post.data.tags && post.data.tags.length > 0 && (
-						<ul class="tag-list" aria-label="文章标签">
-							{post.data.tags.map((tag) => <li>{tag}</li>)}
-						</ul>
+						<ul class="tag-list" aria-label="文章标签">{post.data.tags.map((tag) => <li>{tag}</li>)}</ul>
 					)}
 					<p class="page-desc article-summary">{post.data.description}</p>
 				</header>
+
+				<nav class="article-toc-mobile" aria-label="文章目录">
+					{tocItems.map((item) => <a href={`#${item.slug}`}>{item.text}</a>)}
+				</nav>
 
 				<div class="article-prose">
 					<Content />
@@ -65,3 +52,17 @@ const tocItems = [
 		</div>
 	</section>
 </BaseLayout>
+
+<script>
+	const enhanceArticle = () => {
+		document.querySelectorAll<HTMLAnchorElement>(".article-prose a[href]").forEach((link) => {
+			const target = new URL(link.href, window.location.href);
+			if (target.origin === window.location.origin) return;
+			link.target = "_blank";
+			link.rel = "noreferrer";
+		});
+	};
+
+	document.addEventListener("astro:page-load", enhanceArticle);
+	if (document.readyState !== "loading") enhanceArticle();
+</script>

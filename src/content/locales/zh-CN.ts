@@ -9,7 +9,7 @@ export const zhCN: LocaleContent = {
 	],
 	home: {
 		metaTitle: "首页",
-		metaDescription: "轻量、克制、偏工程师气质的个人站首页",
+		metaDescription: "MagicXu 的个人网站：Android 工程实践、AI 产品探索与独立开发项目。",
 		title: siteConfig.title,
 		subtitle: "Android 工程师 / AI 探索者 / 独立开发者",
 		slogan: siteConfig.slogan,

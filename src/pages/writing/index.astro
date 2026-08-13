@@ -9,19 +9,22 @@ const { writing } = content;
 const posts = await getPublishedPosts();
 ---
 
-<BaseLayout>
-	<section class="section">
+<BaseLayout metaTitle={writing.metaTitle} metaDescription={writing.metaDescription}>
+	<section class="section writing-section">
 		<div class="container">
-			<h1 class="page-title">{writing.title}</h1>
-			<p class="page-desc">{writing.description}</p>
-			{writing.hint && <p class="page-hint">{writing.hint}</p>}
+			<header class="page-heading writing-heading" data-reveal-group>
+				<h1 class="page-title">{writing.title}</h1>
+				<p class="page-desc">{writing.description}</p>
+				{writing.hint && <p class="page-hint">{writing.hint}</p>}
+			</header>
 
 			{posts.length === 0 ? (
 				<p class="empty-state">{writing.emptyMessage}</p>
 			) : (
-				<div class="card-grid writing-grid">
-					{posts.map((post) => (
+				<div class="writing-index">
+					{posts.map((post, index) => (
 						<ArticleCard
+							index={index + 1}
 							title={post.data.title}
 							summary={post.data.description}
 							date={formatPubDate(post.data.pubDate)}

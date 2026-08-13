@@ -7,9 +7,17 @@ import "../styles/global.css";
 
 interface Props {
 	lang?: string;
+	metaTitle?: string;
+	metaDescription?: string;
 }
 
-const { lang = "zh-CN" } = Astro.props;
+const {
+	lang = "zh-CN",
+	metaTitle,
+	metaDescription = siteConfig.description
+} = Astro.props;
+const pageTitle = metaTitle ? `${metaTitle} · ${siteConfig.title}` : siteConfig.title;
+const canonicalUrl = new URL(Astro.url.pathname, siteConfig.url);
 ---
 
 <html lang={lang}>
@@ -17,17 +25,19 @@ const { lang = "zh-CN" } = Astro.props;
 		<meta charset="utf-8" />
 		<link rel="icon" href="/favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta name="description" content={siteConfig.description} />
+		<meta name="description" content={metaDescription} />
 		<meta name="author" content={siteConfig.author} />
 		<meta name="generator" content={Astro.generator} />
-		<meta property="og:title" content={siteConfig.title} />
-		<meta property="og:description" content={siteConfig.description} />
+		<meta name="theme-color" content="#080a12" />
+		<link rel="canonical" href={canonicalUrl} />
+		<meta property="og:title" content={pageTitle} />
+		<meta property="og:description" content={metaDescription} />
 		<meta property="og:type" content="website" />
-		<meta property="og:url" content={siteConfig.url} />
+		<meta property="og:url" content={canonicalUrl} />
 		<meta name="twitter:card" content="summary" />
-		<meta name="twitter:title" content={siteConfig.title} />
-		<meta name="twitter:description" content={siteConfig.description} />
-		<title>{siteConfig.title}</title>
+		<meta name="twitter:title" content={pageTitle} />
+		<meta name="twitter:description" content={metaDescription} />
+		<title>{pageTitle}</title>
 		<ClientRouter />
 	</head>
 	<body>

@@ -6,7 +6,12 @@ const pathname = Astro.url.pathname;
 const content = getLocaleContent();
 const links = content.navigation;
 
-const isActive = (href: string) => pathname === href;
+const normalizePath = (path: string) => path !== "/" && path.endsWith("/") ? path.slice(0, -1) : path;
+const normalizedPathname = normalizePath(pathname);
+const isActive = (href: string) => {
+	const normalizedHref = normalizePath(href);
+	return normalizedPathname === normalizedHref || normalizedPathname.startsWith(`${normalizedHref}/`);
+};
 ---
 
 <header class="site-header" transition:persist>
@@ -14,10 +19,17 @@ const isActive = (href: string) => pathname === href;
 		<a class="site-brand" href="/">{siteConfig.title}</a>
 		<nav class="site-nav" aria-label="主导航">
 			{links.map((item) => (
-				<a class={isActive(item.href) ? "nav-link active" : "nav-link"} href={item.href}>
+				<a
+					class={isActive(item.href) ? "nav-link active" : "nav-link"}
+					href={item.href}
+					aria-current={isActive(item.href) ? "page" : undefined}
+				>
 					{item.label}
 				</a>
 			))}
+			<a class="nav-link nav-external" href={siteConfig.github} target="_blank" rel="noreferrer">
+				GitHub <span aria-hidden="true">↗</span>
+			</a>
 		</nav>
 	</div>
 </header>

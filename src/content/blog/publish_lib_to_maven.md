@@ -11,14 +11,14 @@ lang: "zh-CN"
 > 标签：Android / Maven Central / 开源  
 > 预计阅读：8 分钟
 
-# 🚀 我把 Android 库发到 Maven Central，一路踩坑总结（2026 最新版）
+## 🚀 我把 Android 库发到 Maven Central，一路踩坑总结（2026 最新版）
 
 > 这篇不是教程，是一线踩坑实录  
 > 目标：让你**少踩 90% 的坑，一次发版成功**
 
 ---
 
-# 🧠 先说结论（建议先看）
+## 🧠 先说结论（建议先看）
 
 发布 Maven Central，本质就三件事：
 - GPG 签名
@@ -33,7 +33,7 @@ lang: "zh-CN"
 
 ---
 
-# 🧭 一、现在的发布方式（别走老路）
+## 🧭 一、现在的发布方式（别走老路）
 
 现在已经不用老的 OSSRH 了，直接用：
 
@@ -47,16 +47,16 @@ lang: "zh-CN"
 
 ---
 
-# 🔐 二、GPG（第一大坑）
+## 🔐 二、GPG（第一大坑）
 
 这一部分，几乎 80% 的人会卡。
 
-## 1️⃣ 安装
+### 1️⃣ 安装
 ```bash
 brew install gnupg
 ```
 
-## 2️⃣ 生成 key
+### 2️⃣ 生成 key
 ```bash
 gpg --full-generate-key
 ```
@@ -66,7 +66,7 @@ gpg --full-generate-key
 - 永不过期
 - email：建议用 GitHub 同一个
 
-## 3️⃣ 查 keyId
+### 3️⃣ 查 keyId
 ```bash
 gpg --list-secret-keys --keyid-format=long
 ```
@@ -76,12 +76,12 @@ sec   rsa4096/XXXXXXXXXXXXXXX
 ```
 👉 `/` 后面那串就是 keyId
 
-## 4️⃣ 导出私钥
+### 4️⃣ 导出私钥
 ```bash
 gpg --export-secret-keys -a YOUR_KEY_ID > private-key.asc
 ```
 
-## 5️⃣ 上传公钥（关键）
+### 5️⃣ 上传公钥（关键）
 不要用命令，直接走网页：
 👉 https://keys.openpgp.org
 
@@ -90,7 +90,7 @@ gpg --export-secret-keys -a YOUR_KEY_ID > private-key.asc
 2. 收邮件
 3. 点验证
 
-## ⚠️ 我踩过的坑（重点）
+### ⚠️ 我踩过的坑（重点）
 ❌ 坑 1：Outlook 收不到验证邮件
 症状：
 - 等半小时没反应
@@ -118,13 +118,13 @@ published with only non-identity information
 
 ---
 
-# ⚙️ 三、Gradle 配置（别手写，直接让 AI 做）
+## ⚙️ 三、Gradle 配置（别手写，直接让 AI 做）
 
 这一块，说实话：
 👉 不值得手写
 直接让 Codex / Cursor 帮你生成。
 
-## ✅ 推荐 Prompt（直接复制）
+### ✅ 推荐 Prompt（直接复制）
 ```
 请帮我为一个 Android library 模块配置 Maven Central 发布：
 
@@ -147,7 +147,7 @@ published with only non-identity information
 
 ---
 
-# 🔑 四、gradle.properties（第二大坑）
+## 🔑 四、gradle.properties（第二大坑）
 
 路径：
 ```
@@ -155,7 +155,7 @@ published with only non-identity information
 ```
 👉 注意：不是项目里的，是你电脑全局的
 
-## 示例配置
+### 示例配置
 ```properties
 mavenCentralUsername=xxx
 mavenCentralPassword=xxx
@@ -164,7 +164,7 @@ signingInMemoryKey=（一整行私钥）
 signingInMemoryKeyPassword=xxx
 ```
 
-## ⚠️ 最大坑（我卡最久的地方）
+### ⚠️ 最大坑（我卡最久的地方）
 ❌ 错误写法（直接粘私钥）
 ```
 -----BEGIN PGP PRIVATE KEY BLOCK-----
@@ -189,7 +189,7 @@ signingInMemoryKey=-----BEGIN... \n xxx \n xxx \n -----END...
 
 ---
 
-# 🧪 五、本地验证（一定要做）
+## 🧪 五、本地验证（一定要做）
 
 ```bash
 ./gradlew publishToMavenLocal
@@ -201,7 +201,7 @@ signingInMemoryKey=-----BEGIN... \n xxx \n xxx \n -----END...
 
 ---
 
-# 🚀 六、正式发布
+## 🚀 六、正式发布
 
 ```bash
 ./gradlew publishAndReleaseToMavenCentral
@@ -216,7 +216,7 @@ BUILD SUCCESSFUL
 
 ---
 
-# 📦 七、发布后去哪看？
+## 📦 七、发布后去哪看？
 
 1️⃣ Central Portal
 👉 最快能看到
@@ -233,7 +233,7 @@ https://repo1.maven.org/maven2/io/github/xxx/xxx/版本/
 
 ---
 
-# 📦 八、别人怎么用你的库
+## 📦 八、别人怎么用你的库
 
 ```gradle
 dependencies {
@@ -245,28 +245,28 @@ dependencies {
 
 ---
 
-# 💣 九、我这一路踩过的坑总结
+## 💣 九、我这一路踩过的坑总结
 
-## 环境问题
+### 环境问题
 - Homebrew 太旧 → 装不了 gnupg
 - Git 路径失效 → IDE 报错
 
-## GPG
+### GPG
 - 邮件收不到
 - keyId 用错
 - 没验证邮箱
 
-## Gradle
+### Gradle
 - 私钥格式错误（最坑）
 - signing 配置不匹配
 
-## 发布
+### 发布
 - groupId 不合法
 - POM 信息缺失
 
 ---
 
-# 🎯 最后一句话总结
+## 🎯 最后一句话总结
 
 👉 Maven Central 发布不是难，是“坑多但固定”
 踩完一遍，以后就没感觉了。
