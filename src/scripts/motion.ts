@@ -20,7 +20,7 @@ const syncNavState = () => {
 };
 
 const clearMotionState = () => {
-	const targets = document.querySelectorAll<HTMLElement>(".site-header, [data-reveal-group] > *, .motion-card, .motion-row, .code-panel");
+	const targets = document.querySelectorAll<HTMLElement>("[data-reveal-group] > *, .motion-card, .motion-row, .code-panel");
 	if (targets.length === 0) return;
 	gsap.killTweensOf(targets);
 	gsap.set(targets, { clearProps: "transform,opacity,visibility" });
@@ -43,10 +43,8 @@ const initMotion = () => {
 			const { desktop, reduceMotion } = context.conditions as { desktop: boolean; reduceMotion: boolean };
 			if (reduceMotion) return;
 
-			const header = document.querySelector(".site-header");
 			const revealItems = document.querySelectorAll("[data-reveal-group] > *");
 			const motionRows = document.querySelectorAll(".motion-row");
-			if (header) gsap.from(header, { y: -12, autoAlpha: 0, duration: 0.45, ease: "power2.out" });
 			if (revealItems.length) gsap.from(revealItems, {
 				y: 18,
 				autoAlpha: 0,

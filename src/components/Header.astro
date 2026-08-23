@@ -16,12 +16,13 @@ const isActive = (href: string) => {
 
 <header class="site-header" transition:persist>
 	<div class="container header-inner">
-		<a class="site-brand" href="/">{siteConfig.title}</a>
+		<a class="site-brand" href="/" data-astro-prefetch="load">{siteConfig.title}</a>
 		<nav class="site-nav" aria-label="主导航">
 			{links.map((item) => (
 				<a
 					class={isActive(item.href) ? "nav-link active" : "nav-link"}
 					href={item.href}
+					data-astro-prefetch="load"
 					aria-current={isActive(item.href) ? "page" : undefined}
 				>
 					{item.label}
