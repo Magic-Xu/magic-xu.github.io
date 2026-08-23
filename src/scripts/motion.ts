@@ -26,7 +26,7 @@ const clearMotionState = () => {
 	gsap.set(targets, { clearProps: "transform,opacity,visibility" });
 };
 
-const initMotion = () => {
+const initMotion = (animateEntrance = true) => {
 	window.__magicMotionCleanup?.();
 	clearMotionState();
 	syncNavState();
@@ -43,27 +43,31 @@ const initMotion = () => {
 			const { desktop, reduceMotion } = context.conditions as { desktop: boolean; reduceMotion: boolean };
 			if (reduceMotion) return;
 
-			const revealItems = document.querySelectorAll("[data-reveal-group] > *");
-			const motionRows = document.querySelectorAll(".motion-row");
-			if (revealItems.length) gsap.from(revealItems, {
-				y: 18,
-				autoAlpha: 0,
-				duration: 0.65,
-				stagger: 0.065,
-				ease: "power3.out"
-			});
-			if (motionRows.length) gsap.from(motionRows, {
-				y: 12,
-				autoAlpha: 0,
-				duration: 0.55,
-				stagger: 0.055,
-				delay: 0.08,
-				ease: "power2.out"
-			});
+			if (animateEntrance) {
+				const revealItems = document.querySelectorAll("[data-reveal-group] > *");
+				const motionRows = document.querySelectorAll(".motion-row");
+				if (revealItems.length) gsap.from(revealItems, {
+					y: 18,
+					autoAlpha: 0,
+					duration: 0.65,
+					stagger: 0.065,
+					ease: "power3.out"
+				});
+				if (motionRows.length) gsap.from(motionRows, {
+					y: 12,
+					autoAlpha: 0,
+					duration: 0.55,
+					stagger: 0.055,
+					delay: 0.08,
+					ease: "power2.out"
+				});
+			}
 
 			if (document.querySelector(".product-stack")) {
-				gsap.from(".featured-product", { x: desktop ? 28 : 0, y: desktop ? 0 : 14, autoAlpha: 0, duration: 0.78, delay: 0.13, ease: "power3.out" });
-				gsap.from(".code-panel", { y: 18, autoAlpha: 0, duration: 0.72, stagger: 0.1, delay: 0.22, ease: "power3.out" });
+				if (animateEntrance) {
+					gsap.from(".featured-product", { x: desktop ? 28 : 0, y: desktop ? 0 : 14, autoAlpha: 0, duration: 0.78, delay: 0.13, ease: "power3.out" });
+					gsap.from(".code-panel", { y: 18, autoAlpha: 0, duration: 0.72, stagger: 0.1, delay: 0.22, ease: "power3.out" });
+				}
 
 				if (desktop) {
 					const hero = document.querySelector<HTMLElement>(".home-hero");
@@ -95,13 +99,15 @@ const initMotion = () => {
 	};
 };
 
-if (document.readyState === "loading") {
-	document.addEventListener("DOMContentLoaded", initMotion, { once: true });
-} else {
-	initMotion();
-}
+let isInitialPageLoad = true;
+const handlePageLoad = () => {
+	const isInitialHomeLoad = isInitialPageLoad && normalizePath(window.location.pathname) === "/";
+	initMotion(!isInitialHomeLoad);
+	isInitialPageLoad = false;
+};
 
-document.addEventListener("astro:page-load", initMotion);
+document.addEventListener("astro:page-load", handlePageLoad);
+if (document.readyState === "complete") handlePageLoad();
 document.addEventListener("astro:before-swap", () => {
 	window.__magicMotionCleanup?.();
 	clearMotionState();
