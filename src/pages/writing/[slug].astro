@@ -61,8 +61,52 @@ const tocItems = headings
 			link.target = "_blank";
 			link.rel = "noreferrer";
 		});
+		document.querySelectorAll<HTMLElement>(".article-prose [data-copyable-prompt]").forEach((prompt) => {
+			if (prompt.querySelector(".prompt-copy")) return;
+			const code = prompt.querySelector("pre code");
+			if (!code) return;
+			const button = document.createElement("button");
+			button.type = "button";
+			button.className = "prompt-copy";
+			button.textContent = "复制提示词";
+			button.setAttribute("aria-live", "polite");
+			button.addEventListener("click", async () => {
+				try {
+					await navigator.clipboard.writeText(code.textContent ?? "");
+					button.textContent = "已复制";
+				} catch {
+					button.textContent = "请选中下方文字复制";
+				}
+			});
+			prompt.prepend(button);
+		});
 	};
 
 	document.addEventListener("astro:page-load", enhanceArticle);
 	if (document.readyState !== "loading") enhanceArticle();
 </script>
+
+<style>
+	:global(.article-prose [data-copyable-prompt]) {
+		margin-block: 1.5rem;
+	}
+	:global(.article-prose [data-copyable-prompt] pre) {
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+		line-height: 1.8;
+	}
+	:global(.article-prose .prompt-copy) {
+		padding: 0.55rem 0.85rem;
+		border: 1px solid var(--color-line-strong);
+		border-radius: 0.4rem;
+		background: var(--color-surface-raised);
+		color: var(--color-text);
+		font: inherit;
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+	:global(.article-prose .prompt-copy:focus-visible) {
+		outline: 2px solid var(--color-coral);
+		outline-offset: 3px;
+	}
+</style>
