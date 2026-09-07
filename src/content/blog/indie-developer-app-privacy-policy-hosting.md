@@ -1,5 +1,5 @@
 ---
-title: "独立 App 开发者：如何托管隐私政策和用户协议"
+title: "独立 App 开发系列：如何托管隐私政策和用户协议"
 description: "记录一次为独立 App 准备 GitHub Pages 法律页面的实战流程，包括双语隐私政策、用户协议、同步脚本和上架 URL 规划。"
 pubDate: 2026-05-05
 draft: false
