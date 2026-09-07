@@ -1,0 +1,33 @@
+{
+  "articleId": "google-play-one-time-purchase-testing",
+  "preparedAt": "2026-09-07",
+  "website": {
+    "source": "src/content/blog/google-play-one-time-purchase-testing.md",
+    "sha256": "0fab8c79ecf300a5c5ae2a7746ced2a1c46be5adebb66730db190c353bc98bf7",
+    "status": "published",
+    "publishedUrl": "https://magic-xu.github.io/writing/google-play-one-time-purchase-testing/",
+    "publishedAt": "2026-09-08"
+  },
+  "wechat": {
+    "source": "editorial/google-play-one-time-purchase-testing/wechat.md",
+    "adaptedFromSha256": "0fab8c79ecf300a5c5ae2a7746ced2a1c46be5adebb66730db190c353bc98bf7",
+    "status": "local-draft",
+    "accountName": "小麦在野",
+    "title": "独立 App 开发系列：用 AI 接入 Google Play 一次性内购",
+    "summary": "代码交给 AI，配置和验收怎么做？附接入提示词、后台与手机配图，重点排查 Play 账号地区，再验证价格、购买、Pro 权益和订单。",
+    "publishedUrl": null,
+    "publishedAt": null,
+    "applicationIdentity": "anonymized",
+    "assets": [
+      "editorial/google-play-one-time-purchase-testing/assets/wechat/console-product-form.png",
+      "editorial/google-play-one-time-purchase-testing/assets/wechat/console-region-price.png",
+      "editorial/google-play-one-time-purchase-testing/assets/wechat/console-internal-test.png",
+      "editorial/google-play-one-time-purchase-testing/assets/wechat/console-license-test.png",
+      "editorial/google-play-one-time-purchase-testing/assets/wechat/play-country.png",
+      "editorial/google-play-one-time-purchase-testing/assets/wechat/localized-price.png",
+      "editorial/google-play-one-time-purchase-testing/assets/wechat/test-purchase.png",
+      "editorial/google-play-one-time-purchase-testing/assets/wechat/pro-unlocked.png",
+      "editorial/google-play-one-time-purchase-testing/assets/wechat/console-order-detail.png"
+    ]
+  }
+}
