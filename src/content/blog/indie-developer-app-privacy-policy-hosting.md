@@ -1,240 +1,261 @@
 ---
-title: "独立 App 开发系列：如何托管隐私政策和用户协议"
-description: "记录一次为独立 App 准备 GitHub Pages 法律页面的实战流程，包括双语隐私政策、用户协议、同步脚本和上架 URL 规划。"
-pubDate: 2026-05-05
+title: "独立 App 开发系列：用 GitHub Pages 托管隐私政策和用户协议"
+description: "从 Google Play 的隐私政策要求出发，介绍如何在独立 legal 仓库维护隐私政策和用户协议，用 GitHub Pages 免费托管，并在 App 迭代时一起更新文案、检查链接。"
+pubDate: 2026-09-15
 draft: false
-readingTime: 8
-tags: ["独立开发", "Google Play", "GitHub Pages", "隐私政策"]
+readingTime: 11
+tags: ["独立开发", "Google Play", "GitHub Pages", "隐私政策", "AI"]
 lang: "zh-CN"
 ---
 
-> 标签：独立开发 / Google Play / GitHub Pages / 隐私政策  
-> 预计阅读：8 分钟
+**适用读者：** 准备在 Google Play 上架 Android App，需要搭建隐私政策和用户协议页面的独立开发者。
 
-做独立 App 的 MVP 时，很多人会把注意力放在功能、UI、构建和上架文案上。但只要你准备上 Google Play，隐私政策、用户协议、Data safety 这些“非功能项”很快就会变成硬需求。
+**文章收获：** 了解 Google Play 的隐私政策要求，学会组织、生成和部署多语言隐私政策与用户协议，并获得可交给 AI 的提示词和后续维护方法。
 
-我这次做 TickFloat 的过程里，把这件事标准化了一下：每个新 App 不再临时手写一个隐私政策页面，也不把法律文案塞在主工程里等着以后想办法托管，而是在 MVP 阶段就准备一套可直接发布到 GitHub Pages 的静态页面，并提供同步脚本。
+**一句话总结：** 把隐私政策和用户协议集中在公开 legal 仓库维护，用 GitHub Pages 提供固定地址，App 功能变化时一起核对文案和页面入口。
 
-这篇文章记录的是实际落地方式，其他独立开发者也可以直接照着做。
+> 文中的平台要求按 2026 年 9 月 15 日的官方资料核对。
 
-## 背景：为什么要单独托管法律页面
+做独立 App，除了开发功能，还要准备一些用户平时不太会点开、上架时却绕不开的内容。隐私政策就是其中之一：Google Play 后台要填一个地址，App 里也要有入口，页面还得说清楚产品实际怎样处理数据。
 
-TickFloat 是一个 Android 悬浮时钟与倒计时工具。它会申请悬浮窗权限，用前台服务保持悬浮窗运行，但它不读屏、不使用无障碍服务、不自动点击、不上传用户数据。
+我的做法是单独建一个公开的 legal 仓库，集中维护隐私政策和用户协议，再通过 GitHub Pages 发布。App 代码继续放在自己的仓库里，App 和商店后台使用固定的政策页面地址。功能变化时，再一起检查文案和链接。
 
-这类工具虽然功能很轻，但上架时仍然需要清楚说明：
+## 1. 为什么本地工具也需要隐私政策
 
-- 为什么需要悬浮窗权限。
-- 是否读取其他 App 内容。
-- 是否使用 Accessibility Service。
-- 是否上传个人数据。
-- 是否接入广告、内购、分析 SDK。
-- 用户如何删除本地数据。
+如果 App 没有账号、没有自己的服务器，主要功能都在手机上完成，还需要隐私政策吗？
 
-这些内容不适合只写在 README 里。Google Play 需要一个公开可访问的隐私政策 URL，用户也应该能从 App 内打开这些页面。
+Google 的要求很明确：需要。在 [Google Play 用户数据政策](https://support.google.com/googleplay/android-developer/answer/10144311?hl=en) 的 Privacy Policy 部分，原文写的是：
 
-所以我采用了一个很轻的方案：用 GitHub Pages 托管静态 HTML。
+> Apps that do not access any personal and sensitive user data must still submit a privacy policy.
 
-## 目标结构
+也就是说，即使不访问个人和敏感用户数据，App 仍然要提交隐私政策。
 
-我为 TickFloat 准备了一个单独的 public 仓库，例如：
+对用户来说，本地工具也有值得说明的事情。例如，它为什么申请某个权限，选择的文件会不会上传，设置保存在哪里，删除数据时应该怎样操作。
+
+把这些事情讲清楚，开发者和用户对产品的理解才容易一致。
+
+## 2. Google 对页面有哪些要求
+
+根据同一份[用户数据政策](https://support.google.com/googleplay/android-developer/answer/10144311?hl=en)，与页面建设直接相关的要求主要有以下几项：
+
+- **提供入口。** 在 Play Console 指定字段填写隐私政策链接，在 App 内提供链接或正文。
+- **公开可读。** 使用有效、公开可访问、不限制访问地区的 URL；不能是 PDF，也不能是可编辑文档。
+- **明确归属。** 页面标明是隐私政策，并包含商店所列的开发者主体或应用名称。
+- **说明数据处理。** 包括访问、收集、使用和共享情况，相关第三方，以及安全处理、保留和删除方式。
+- **提供联系渠道。** 用户能够提出隐私相关问题。
+
+这些要求决定了我们至少需要一个能直接阅读正文的公开页面。只在私有代码仓库里保存一份文档，外部用户无法访问，就还没有完成这件事。
+
+我也会一起准备用户协议，用来说明应用的使用规则、付费权益和服务边界。隐私政策与用户协议承担的作用不同：前者解释数据怎样处理，后者解释用户使用产品时的约定。这里的用户协议页面是我们的产品安排，不能把它与上面列出的隐私政策要求混成一项。
+
+## 3. GitHub Pages 与两个仓库的分工
+
+### 免费托管静态页面
+
+隐私政策和用户协议主要由文字和链接组成，用静态 HTML 就能呈现。GitHub Pages 可以从仓库发布 HTML、CSS 和 JavaScript，并提供 `github.io` 地址，因此这部分不需要自己购买服务器，也不必先买域名。[GitHub Pages 官方介绍](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)
+
+对我来说，能免费托管、用 Git 管理修改记录，已经足够满足这类页面的需要。“白嫖”可以，但要清楚自己用了什么服务：Pages 负责静态内容展示，账号处理和支付等业务仍然由对应系统承担。GitHub 对商业交易和 SaaS 等用途另有[使用限制](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits)。
+
+### 为什么单独建 legal 仓库
+
+使用 **GitHub Free** 时，承载 Pages 的仓库必须公开。GitHub 的部分付费方案支持从私有仓库发布 Pages，所以“必须公开”是我们采用免费方案的前提。[GitHub 官方说明](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site)
+
+App 代码可以继续放在私有仓库，公开页面则放进另一个仓库。我习惯给后者加上 `-legal` 后缀，方便一眼认出它的用途。
+
+下面是两个仓库的分工：
+
+| 仓库 | 维护内容 | 对外关系 |
+| --- | --- | --- |
+| App 仓库 | 代码、页面链接、发布校验 | 可以保持私有 |
+| legal 仓库 | 隐私政策、用户协议的文案源、生成工具和页面 | 公开，由 Pages 发布 |
+
+**隐私政策和用户协议都以 legal 仓库里的内容为准。** 各语言的文案、共用生效日期、样式和生成工具放在一起，修改源文件后生成要发布的 HTML。这样，每一项内容都有明确的维护位置。
+
+文案仍然要跟着 App 功能更新。添加广告、账号、上传或付费功能时，先根据 App 的实际实现核对数据行为，再到 legal 仓库修改对应说明。
+
+我把这两个仓库放在同一个工作目录（workspace）下，方便和 AI 一起查看代码与法律文案。它们各自管理提交和发布：App 版本在 App 仓库推进，法律页面在 legal 仓库生成、检查和发布。App 的发布检查会直接读取所选 legal 仓库中的页面，核对必需页面、日期和链接。
+
+### 顺带搭建一个产品官网
+
+如果产品还需要一个官网，可以在同一个 Pages 站点里加一个简单的产品首页。隐私政策和用户协议已经有了托管位置，产品介绍也可以沿用这个站点一起发布。
+
+首页放清楚产品做什么、怎么下载、怎样联系开发者，再提供隐私政策和用户协议入口。我觉得，对独立产品来说，有这样一个完整的对外入口，会显得更正规一些，用户也更容易找到需要的信息。
+
+我的项目就把产品首页和法律页面放在同一个 legal 仓库里维护，共用样式和导航。官网是按产品需要增加的部分；如果当前只准备上架所需的页面，先把隐私政策和用户协议做好，产品介绍可以以后再补。
+
+## 4. 页面内容从真实功能出发
+
+开始写之前，我建议先把应用的数据行为列清楚。可以让 AI 读取代码、权限和依赖，帮忙查找证据；涉及服务器配置或尚未实现的功能，再由开发者补充确认。
+
+主要核对这些内容：
+
+| 内容 | 需要弄清楚的问题 |
+| --- | --- |
+| 账号与服务器 | 是否注册，哪些数据离开设备 |
+| 权限与文件 | 为什么访问，数据用于什么功能 |
+| 第三方 SDK | 广告、统计、崩溃服务处理哪些数据 |
+| 付费功能 | 卖什么权益，怎样处理购买相关信息 |
+| 保存与删除 | 数据存在哪里，保留多久，怎样删除 |
+
+例如，一个工具可以在本地处理用户选择的文件，同时接入广告或崩溃分析服务。文件有没有上传、SDK 有没有发送其他数据，需要分别核对。
+
+Google 的 [Data safety 填写说明](https://support.google.com/googleplay/android-developer/answer/10787469?hl=en) 也明确把第三方库和 SDK 的数据行为纳入开发者的申报范围。判断时要结合实际接入方式和 SDK 官方说明，不能因为“我没有自己的服务器”，就直接写“整个 App 不收集任何数据”。
+
+删除方式也应该写具体。应用内部保存的设置、用户导出到相册的文件、服务器上的账号数据，可能需要不同的删除操作。只有确认数据确实随清除存储或卸载一起删除，才能这样描述。
+
+如果 App 支持在应用内创建账号，还要进一步核对 Google 的[账号删除要求](https://support.google.com/googleplay/android-developer/answer/13327111?hl=en)：提供 App 内和网页端的删除请求入口，并实际处理账号及相关数据。静态网页可以承载请求方式和说明，真正的删除流程仍需落实。
+
+## 5. 从生成页面到接入 App
+
+### 准备文件和语言版本
+
+下面按当前项目整理了一套简化目录，只列与本篇有关的文件。`app` 和 `app-legal` 分别代表 App 仓库和公开页面仓库；这些目录名和脚本是项目约定，可以按自己的工程调整。
 
 ```text
-tickfloat-legal
+workspace/
+├── app/
+│   └── tools/release/
+│       └── validate_store_listing.py
+└── app-legal/
+    ├── content/
+    │   ├── legal.json
+    │   └── legal/
+    │       ├── en.json
+    │       └── zh-CN.json
+    ├── tools/
+    │   └── build_site.py
+    ├── assets/legal.css
+    ├── index.html
+    ├── privacy.html
+    ├── terms.html
+    └── zh-CN/
+        ├── privacy.html
+        └── terms.html
 ```
 
-最终 GitHub Pages 仓库结构是：
+在 legal 仓库中，`content/legal/` 下的 JSON 保存各语言的隐私政策和用户协议文案，`content/legal.json` 保存共用生效日期。HTML 由生成工具输出，日常修改从这些源文件开始。
+
+`index.html` 是站点首页。只托管法律页面时，可以用它列出各语言的隐私政策和用户协议；需要产品官网时，再把这个首页扩充为产品介绍页。两种情况下，政策和协议都保留各自可以直接访问的地址。
+
+我的项目目前支持 15 种语言，对应 30 个法律页面。把文案与页面生成分开后，修改内容、日期或共用样式时更容易检查，语言菜单和页面导航也可以统一生成。
+
+英文页面位于根目录，其他语言放在各自的目录下。商店使用固定的隐私政策地址，App 按自己的语言设置选择页面，未覆盖的语言回退到默认版本。根路径的语言是项目约定；实际支持哪些语言，应根据目标用户安排，各版本的数据说明保持一致。
+
+### 用 AI 协助生成
+
+这部分适合让 AI 结合两个仓库完成页面初稿和生成工具。下面的提示词按同一个 workspace 下的两个仓库组织，应用名称、公开联系方式和目录需要换成自己的：
+
+<div data-copyable-prompt>
 
 ```text
-tickfloat-legal/
-  index.html
-  user-agreement.html
-  privacy-policy.html
-  en/
-    index.html
-    user-agreement.html
-    privacy-policy.html
-  zh-CN/
-    index.html
-    user-agreement.html
-    privacy-policy.html
+请读取 workspace 下的 app 与 app-legal 两个仓库，结合 App 的权限、依赖和实现，
+整理账号、服务器、文件上传、广告、统计、崩溃服务、付费，以及数据保留和删除行为。
+
+列出代码依据；代码无法确认的配置向我提问，不把规划功能写成已上线能力。
+查阅 Google Play 和已接入 SDK 的官方要求后，起草中文、英文隐私政策和用户协议，
+写明应用名称、公开联系方式和生效日期。
+
+在 app-legal 中集中维护隐私政策和用户协议：
+用 content/legal/<语言>.json 保存文案，content/legal.json 保存共用生效日期，
+提供 tools/build_site.py 生成静态 HTML，并支持 --check 检查输出与源文件是否一致。
+保留已有公开 URL。仓库已有产品首页时，沿用它的样式和导航。
+文案源与生成页面一起纳入版本管理。
+
+App 仓库保留法律链接和只读发布校验，直接检查指定的 legal 仓库目录。
+校验缺失页面、日期和语言链接；支持指定另一个 legal 工作区作为检查目标。
+
+完成本地生成与检查，提供预览、GitHub Pages 配置步骤和 App 内链接方案，
+供我审查后发布。
 ```
 
-这里有两个设计点：
+</div>
 
-第一，根目录保留英文版 `privacy-policy.html`，给 Google Play 填写隐私政策 URL 时最稳。
+如果这次还想一起搭建官网，可以在提示词中补充：在同一个站点增加产品介绍首页，包含功能介绍、下载入口、联系方式，以及隐私政策和用户协议链接。
 
-第二，显式提供 `zh-CN/` 和 `en/` 两套路径。App 默认中文时，可以直接打开中文 URL；英文系统语言下，可以打开英文 URL。
+生成后，我会重点核对数据处理、付费承诺、删除方式和联系方式。模板能帮助组织内容，最终写进页面的每一项说明，都要能对应到产品实际行为。
 
-例如：
+### 生成并检查页面
 
-```text
-https://magic-xu.github.io/tickfloat-legal/privacy-policy.html
-https://magic-xu.github.io/tickfloat-legal/zh-CN/privacy-policy.html
-https://magic-xu.github.io/tickfloat-legal/zh-CN/user-agreement.html
-```
-
-## 在主工程里维护源文件
-
-我没有直接在 legal 仓库里编辑页面，而是在 App 主工程里维护源文件：
-
-```text
-TickFloat/
-  docs/
-    github-pages/
-      index.html
-      user-agreement.html
-      privacy-policy.html
-      en/
-        index.html
-        user-agreement.html
-        privacy-policy.html
-      zh-CN/
-        index.html
-        user-agreement.html
-        privacy-policy.html
-```
-
-原因很简单：法律页面和 App 能力强相关。
-
-比如 TickFloat 现在不接入广告、不接入 Billing、不上传数据、不使用无障碍服务。如果未来某个版本加入广告或 Pro Unlock，隐私政策必须和代码一起更新。把源文件放在 App 工程里，更容易在一次功能改动中同步检查。
-
-## 写一个同步脚本
-
-为了避免每次手动复制，我加了一个脚本：
-
-```text
-scripts/sync_legal_pages.sh
-```
-
-默认同步到：
-
-```text
-/Users/magic/Desktop/reborn/tickfloat-legal
-```
-
-使用方式：
+我的项目使用 Python 3，在 legal 仓库运行以下命令：
 
 ```bash
-./scripts/sync_legal_pages.sh
+python3 tools/build_site.py
+python3 tools/build_site.py --check
 ```
 
-也可以传入其他目标路径：
+第一条根据文案源生成各语言的法律页面。我的项目还把产品首页放在同一个仓库，所以这个命令也会一并生成首页和站点地图。第二条检查生成结果是否与源文件一致，发现遗漏生成或输出过期时会报错。
+
+这两个命令只操作本地文件。检查通过后，再审阅页面和差异，将文案源、日期及生成结果一并提交到 legal 仓库，按该仓库的发布流程上线。
+
+生成检查解决的是文件一致性，文案是否准确、翻译是否表达同一层意思，仍然需要单独核对。
+
+### 配置 GitHub Pages
+
+页面检查好后，提交到公开 legal 仓库。然后打开仓库设置：
+
+1. 进入 **Settings → Pages**。
+2. 在 **Build and deployment** 中，将 **Source** 设为 **Deploy from a branch**。
+3. 分支选择存放页面的分支，例如 `main`。
+4. 如果页面位于仓库根目录，目录选择 **/(root)**，然后保存。
+
+这些步骤采用 GitHub 提供的[从分支发布方式](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)。初次使用静态 HTML 时，这样就可以开始，不必额外编写构建工作流。
+
+等待部署完成，再从 Pages 设置里的 **Visit site** 打开站点。项目站点的默认地址由账号名和仓库名组成。下面的 `your-account` 是占位名称，使用时应以自己的 Pages 设置显示的地址为准：
+
+```text
+https://your-account.github.io/app-legal/
+https://your-account.github.io/app-legal/privacy.html
+https://your-account.github.io/app-legal/zh-CN/privacy.html
+```
+
+### 接入并检查入口
+
+拿到地址后，在 Play Console 的隐私政策字段填写**具体的政策页面地址**，用户打开链接就能读到正文。App 的设置或关于页面提供“隐私政策”和“用户协议”入口，并按已支持的语言选择链接。
+
+完成配置后，再检查一次实际使用路径：
+
+- 未登录 GitHub 时，隐私政策链接仍能打开。
+- 手机能够阅读正文，语言切换和协议链接没有指向错误页面。
+- App 内点击入口，确实打开了对应语言的内容。
+- 页面名称、开发者信息和产品当前的数据行为一致。
+- 在面向用户的访问环境中确认页面可用；自己电脑能打开，不代表所有地区都已验证。
+
+这一步也能发现常见的路径问题。例如项目站点带有仓库名这一层路径，页面里的资源和语言链接要按实际部署地址检查。
+
+## 6. 功能变化后怎样维护
+
+页面部署完成后，后续维护就围绕 App 的变化进行。
+
+假设最初的版本没有广告，后来接入了广告 SDK，我会把下面几项纳入这次功能交付：
+
+1. 在 App 仓库核对实际启用的 SDK、配置和数据行为。
+2. 在 legal 仓库更新相关语言的文案，并按实际生效时间维护日期。
+3. 生成页面，运行一致性检查，再检查正文和语言版本。
+4. 核对 Play Console 的 Data safety，并运行 App 的发布资料校验。
+5. 发布 legal 仓库的改动，确认部署结果和线上页面与预期一致。
+
+在我的项目里，App 发布校验默认读取主工作区旁的 legal 仓库。如果法律页面的改动在 legal 仓库的另一个开发工作区，可以显式指定目录。下面的路径是占位示例，运行时换成待检查的目录：
 
 ```bash
-./scripts/sync_legal_pages.sh /path/to/tickfloat-legal
+python3 tools/release/validate_store_listing.py --legal-root /path/to/legal-worktree
 ```
 
-脚本只覆盖指定的 HTML 文件和语言目录，不删除目标仓库里的 `.git`、README 或其他文件。这样同步完之后，直接进入 legal 仓库提交即可：
+这项检查直接读取所选 legal 目录中的法律页面，检查生效日期、同类文档的语言切换和本地链接。目录或必需页面缺失会报错。先在所选 legal 工作区运行生成检查，再运行 App 发布校验，就能确认检查的是本次准备发布的内容。
 
-```bash
-cd /Users/magic/Desktop/reborn/tickfloat-legal
-git status
-git add .
-git commit -m "Update TickFloat legal pages"
-git push
-```
+公开页面有自己的发布步骤：在我的配置中，legal 仓库的改动合入 `main` 后，GitHub Pages 才会部署。新增页面或语言时，先让页面上线并验证，再发布引用这些新链接的 App 版本。
 
-## GitHub Pages 怎么开
+Data safety 是商店里对数据处理情况的结构化说明，填写时需要按 Google 的定义判断。它与隐私政策中的相关披露应保持一致，但页面文字不能代替后台表单。具体口径可查阅 [Data safety 官方说明](https://support.google.com/googleplay/android-developer/answer/10787469?hl=en)。
 
-把 legal 仓库 push 到 GitHub 后，在仓库页面：
+如果某项数据访问超出用户合理预期，还可能需要在使用功能前提供显著说明并取得同意，不能只把说明放在政策页里。是否适用，要结合实际场景核对 [Google 的显著披露与同意要求](https://support.google.com/googleplay/android-developer/answer/11150561?hl=en)。
 
-1. 进入 `Settings`
-2. 找到 `Pages`
-3. `Source` 选择 `Deploy from a branch`
-4. `Branch` 选择 `main`
-5. `Folder` 选择 `/root`
-6. 保存
+最后，尽量保持已经对外使用的 URL 不变。页面改版、增加语言或调整首页时，都要保留旧链接；确实需要迁移，就同时处理旧地址的跳转和 App、商店里的引用。已经安装在用户手机上的旧版本，也可能还在使用原来的地址。
 
-几分钟后，GitHub 会生成类似这样的地址：
+## 写在最后
 
-```text
-https://magic-xu.github.io/tickfloat-legal/
-```
+我选择这套方式，主要看中两点：隐私政策和用户协议的托管成本低，文案也有固定的维护位置。
 
-如果你的 GitHub 用户名是 `Magic-Xu`，仓库名是 `tickfloat-legal`，最终一般是：
+App 仓库负责产品实现、页面入口和发布校验，legal 仓库负责法律文案、页面生成与发布。两边在同一个 workspace 下协作，功能变化时一起检查，文件则各自在所属仓库维护。
 
-```text
-https://magic-xu.github.io/tickfloat-legal/privacy-policy.html
-```
+以后做新的应用，沿用这套结构即可。真正需要重新判断的，是这个产品访问什么数据、引入什么服务，以及向用户做了哪些承诺。
 
-GitHub Pages URL 通常会把用户名转成小写，不影响访问。
-
-## 法律页面应该写什么
-
-我的经验是，MVP 阶段不要写得像大公司模板，也不要遗漏产品边界。
-
-TickFloat 的页面重点写了这些：
-
-- App 是悬浮时钟和倒计时工具。
-- 需要悬浮窗权限是为了在其他 App 上方显示时间。
-- Android 13+ 可能需要通知权限，用于前台服务通知。
-- 不读取其他 App 内容。
-- 不使用 Accessibility Service。
-- 不使用 Usage Access。
-- 不自动点击，不自动执行第三方 App 操作。
-- MVP 不接入广告 SDK、Billing、订阅或分析 SDK。
-- 设置仅保存在本机。
-- 用户可以通过清除 App 存储或卸载 App 删除本地数据。
-
-这套描述和代码能力必须一致。比如你未来真的接入 AdMob，就不能继续写“不包含广告 SDK”。
-
-## App 内怎么接
-
-TickFloat 当前设置页里已经有“用户协议”和“隐私政策”入口文案。下一步可以把它们改成可点击项，根据系统语言打开不同 URL：
-
-中文默认：
-
-```text
-https://magic-xu.github.io/tickfloat-legal/zh-CN/privacy-policy.html
-https://magic-xu.github.io/tickfloat-legal/zh-CN/user-agreement.html
-```
-
-英文：
-
-```text
-https://magic-xu.github.io/tickfloat-legal/en/privacy-policy.html
-https://magic-xu.github.io/tickfloat-legal/en/user-agreement.html
-```
-
-Google Play Console 里的隐私政策 URL 建议填根目录英文版：
-
-```text
-https://magic-xu.github.io/tickfloat-legal/privacy-policy.html
-```
-
-## 这件事为什么值得标准化
-
-独立开发者做多个小 App 时，很容易每次都重复这些事：
-
-- 重新想隐私政策放哪里。
-- 临时写一个 HTML。
-- 忘记双语。
-- 忘记 Google Play 要 HTTPS URL。
-- 忘记 App 内入口。
-- 后续功能变化后，法律文案不同步。
-
-这次我把流程固定成：
-
-```text
-主工程维护源 HTML
-  -> 同步脚本复制到 legal 仓库
-  -> legal 仓库 GitHub Pages 发布
-  -> App 和 Google Play 使用固定 URL
-```
-
-这不是复杂架构，但非常适合独立 App MVP。它足够轻，也足够可维护。
-
-## 可复用清单
-
-每开一个新 App，我建议直接检查这几项：
-
-- 是否有 `docs/github-pages/`。
-- 是否有英文根路径隐私政策。
-- 是否有 `en/` 和 `zh-CN/`。
-- 是否有同步脚本。
-- 是否有 GitHub Pages 仓库。
-- App 设置页是否有用户协议和隐私政策入口。
-- Google Play 隐私政策 URL 是否可公开访问。
-- 隐私政策内容是否和当前 App 权限、SDK、数据行为一致。
-
-这套流程做完，法律页面就不再是每次上架前临时补的东西，而是 App 工程的一部分。
+对独立开发来说，把这些事情放到项目开始时想清楚，后续迭代会省掉不少临时查找、复制和补漏的工作。
