@@ -38,7 +38,7 @@ const tocItems = headings
 					{post.data.tags && post.data.tags.length > 0 && (
 						<ul class="tag-list" aria-label="文章标签">{post.data.tags.map((tag) => <li>{tag}</li>)}</ul>
 					)}
-					<p class="page-desc article-summary">{post.data.description}</p>
+					{post.data.showSummary && <p class="page-desc article-summary">{post.data.description}</p>}
 				</header>
 
 				<nav class="article-toc-mobile" aria-label="文章目录">
