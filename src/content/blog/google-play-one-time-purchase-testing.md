@@ -1,6 +1,6 @@
 ---
-title: "独立 App 开发系列：用 AI 接入 Google Play 一次性内购"
-description: "以 SnapMosaic 永久 Pro 为例，把一次性内购的代码接入交给 AI，再配置 Google Play 商品与测试账号，逐项验证价格、购买和实际权益。附可复制提示词、后台截图与真机检查清单。"
+title: "独立 App 开发系列：Google Play 一次性内购接入实践"
+description: "以 SnapMosaic 永久 Pro 为例，记录 Google Play 一次性内购的接入、管理后台配置、测试与验收，以及价格和购买状态的常见问题。附接入提示词、操作截图和检查方法。"
 pubDate: 2026-09-08
 draft: false
 readingTime: 10
@@ -8,19 +8,19 @@ tags: ["独立开发", "Android", "Google Play", "AI", "应用内购买"]
 lang: "zh-CN"
 ---
 
-**适用读者：** 准备在 Google Play 上架内购、接入支付的 Android 开发者，以及想了解 App 付费流程的独立开发者。
+**适用读者：** 准备给 Android App 接入 Google Play 内购，或正在配置和测试一次性付费功能的开发者。
 
-**文章收获：** 一份可直接交给 AI 的接入提示词，商品与测试账号的配置步骤、账号地区的排查方法，以及购买后的权益和订单检查清单。
+**文章收获：** 看懂商品和测试账号的配置，知道购买后该检查什么，也能排查价格和购买状态的问题。附接入提示词和操作截图。
 
-**一句话总结：** 代码接入可以交给 AI，验收时先核对购买账号及其 Play 地区，再逐项确认价格、购买、权益和后台订单。
+**一句话总结：** 内购接入涉及 App、管理后台和测试账号，购买完成后还要实际检查付费功能是否生效。
 
-## 1. 先把代码接入交给 AI
+## 1. 支付内购的接入
 
-这次，我给 SnapMosaic 加了永久 Pro：用户买一次，就能去掉广告和导出图片上的品牌水印。接入代码就是用 AI 完成的。
+这次，我给 SnapMosaic 加了永久 Pro：用户购买一次，就能去掉广告和导出图片上的品牌水印。这种买完后可以一直使用、不会被消耗掉的权益，对应 Google Play 的**非消耗型一次性商品**。
 
-现在做这类接入，依赖配置、商品查询、购买回调、恢复购买、排错和打包，都可以交给编程 AI。你要先说清楚卖什么、买完能获得什么，再按下面的步骤检查结果。
+Google Play 的 Billing SDK 已经提供了商品与价格查询、购买支付、购买状态查询，以及恢复购买所需的能力，不需要从头实现。
 
-比如“买一次，永久去广告、去水印”，对应的是**非消耗型一次性商品**。如果你做的也是这种付费方式，可以把这段提示词复制给 AI，把商品 ID 和权益换成自己的。
+这部分代码我是用 AI 完成的。接入时，可以先告诉它卖什么、买完能获得什么，再让它按项目现有的架构实现。下面这段提示词可以作为参考，商品 ID 和权益需要换成自己的。
 
 <div data-copyable-prompt>
 
@@ -36,143 +36,164 @@ lang: "zh-CN"
 
 </div>
 
-## 2. 上传测试包，打开商品入口
+代码写好后，还要在 Google Play 管理后台创建对应商品。这次我用内部测试版本验证购买流程，下面按这个过程介绍。
 
-进入 [Google Play Console 开发者后台](https://play.google.com/console/)，选择你的应用。
+## 2. 管理后台配置
 
-打开 **测试和发布 → 测试 → 内部测试 → 发布版本**，创建新的发布版本，上传 AI 生成的 AAB。
+商品卖多少钱、在哪些地区销售，都要在 [Google Play Console 开发者后台](https://play.google.com/console/) 配置。App 通过商品 ID 查询这些信息。
 
-如果“一次性商品”页面提示先上传包含 Billing 权限的安装包，就让 AI 检查新包的最终清单是否包含 `com.android.vending.BILLING`，并核对上传的确实是这个新包。只改本地代码，后台识别到的安装包不会随之更新。
+### 测试包
 
-等 Google 处理完包，再打开 **借助 Play 变现 → 商品 → 一次性商品 → 创建一次性商品**。
+要先上传带有 Billing 权限的 AAB，后台才会开放创建商品的入口。
 
-<img src="/images/blog/google-play-one-time-purchase-testing/console-product-form.png" alt="创建一次性商品：先填写商品 ID，再填写名称和说明" width="720" loading="lazy" />
+进入 Play Console，选择应用。打开 **测试和发布 → 测试 → 内部测试 → 发布版本**，创建新版本，上传测试包 AAB。
 
-## 3. 配好商品、购买选项和销售地区
+如果后台提示安装包缺少 Billing 权限，就检查 AAB 的最终清单中是否有 `com.android.vending.BILLING`。修改本地代码后，记得重新打包、上传，后台才能识别到更新。
 
-按创建表单依次填写：
+### 商品信息
 
-1. **商品 ID**：与代码查询的 ID 逐字一致。这里不要填应用包名；商品 ID 创建后不能再改。
-2. **名称和说明**：告诉用户买到什么，例如“永久 Pro”“一次购买，永久去广告、去水印”。
-3. **购买选项**：永久解锁选择“购买”，填写购买选项 ID，再设置价格和销售地区。
-4. **状态**：完成创建后，检查商品和购买选项是否已启用，测试账号所在地区是否可购买。
+等安装包处理完成后，打开 **借助 Play 变现 → 商品 → 一次性商品 → 创建一次性商品**。
 
-这次使用的商品 ID 是 `mosaic_pro_lifetime`，购买选项 ID 是 `buy`，美国地区定价为 3.99 美元。
+<img src="/images/blog/google-play-one-time-purchase-testing/console-product-form.png" alt="一次性商品创建页面" width="500" loading="lazy" />
 
-进入商品的 **购买选项和优惠**，打开对应购买选项，在 **供应情况和定价** 中查测试账号所在地区。下面这条泰国记录显示价格为 THB 150.00，供应状态为“供应”。
+这里主要填写商品 ID、名称和说明。商品 ID 要与 App 查询时使用的 ID 一致，创建后不能再修改。
 
-<img src="/images/blog/google-play-one-time-purchase-testing/console-region-price.png" alt="在供应情况和定价中核对泰国价格与供应状态" width="720" loading="lazy" />
+名称和说明要让用户知道自己买到了什么，例如“永久 Pro”“一次购买，永久去广告、去水印”。
 
-App 应展示 Google Play 返回的当地价格，不要在按钮里写死“3.99 美元”。
+这次使用的商品 ID 是 `mosaic_pro_lifetime`。它标识的是这个付费商品，与应用包名是两回事。
 
-## 4. 两份测试名单都要配置
+### 购买选项与价格
 
-**内部测试名单管安装资格，许可测试名单管测试付款。** 只配前者，购买时仍可能真的扣钱。
+商品信息填好后，接着配置购买选项。这里设置购买方式、价格和销售地区。
 
-### 内部测试：让账号能装到测试版
+永久解锁选择“购买”，填写购买选项 ID，再设置地区和价格。这次的购买选项 ID 是 `buy`，美国地区定价为 3.99 美元。
 
-在 [Play Console](https://play.google.com/console/) 选择应用，打开 **测试和发布 → 测试 → 内部测试 → 测试用户数量**。
+打开商品的 **购买选项和优惠**，选择对应选项，再进入 **供应情况和定价**。这里能查到各地区的价格。下面这条泰国记录显示 THB 150.00，供应状态为“供应”。
 
-创建电子邮件列表，加入手机上准备用来购买的 Google 账号，勾选这个列表并保存。在“发布版本”中完成内部测试版本的发布。
+<img src="/images/blog/google-play-one-time-purchase-testing/console-region-price.png" alt="泰国地区的价格和供应状态" width="560" loading="lazy" />
 
-回到“测试用户数量”，找到底部的 **在网页中参与测试 → 复制链接**。在手机上用同一个 Google 账号打开链接，加入测试，再按页面入口从 Google Play 安装。
+最后确认商品和购买选项都已启用，测试账号所在地区可以购买。App 要展示 Google Play 返回的当地价格，不能把“3.99 美元”写死在按钮里。
 
-<img src="/images/blog/google-play-one-time-purchase-testing/console-internal-test.png" alt="内部测试：选择测试邮件列表，在页面下方复制参与测试链接" width="720" loading="lazy" />
+## 3. 测试与验收
 
-### 许可测试：让购买面板出现测试卡
+商品配置好后，就可以在手机上试买了。先准备测试账号，再完成一笔购买，检查付费功能是否生效，最后到后台核对订单。
 
-回到 [Play Console](https://play.google.com/console/) 的“所有应用”，打开开发者账号的 **设置 → 许可测试**。
+### 测试账号
 
-选择包含同一个 Google 账号的电子邮件列表，许可响应保留 `RESPOND_NORMALLY`，保存。
+测试安装和购买时，要用同一个 Google 账号。为了不实际扣费，还要给这个账号开通测试付款方式。
 
-<img src="/images/blog/google-play-one-time-purchase-testing/console-license-test.png" alt="许可测试：选择测试名单，许可响应使用 RESPOND_NORMALLY" width="720" loading="lazy" />
+后台有两个对应的设置：**内部测试名单**决定谁能安装测试版，**许可测试名单**决定谁能用测试卡付款。
 
-配置是否生效，要到手机上确认：点击购买，Google Play 付款面板应出现测试卡，以及不会收费的测试订单提示。
+先配置内部测试名单。打开应用的 **测试和发布 → 测试 → 内部测试 → 测试用户数量**，创建电子邮件列表。把准备测试的 Google 账号加进去，再勾选列表并保存。
 
-## 5. 价格一直加载，先查 Play 账号的地区
+然后到“发布版本”中发布内部测试版。回到“测试用户数量”，找到底部的 **在网页中参与测试 → 复制链接**。
 
-**这次最大的坑，是最初用了中国大陆地区的账号。** 商品已经启用，App 里却一直拿不到价格。后来换成泰国地区的测试账号，才显示出 THB 150.00，并完成测试购买。
+在手机上用同一个 Google 账号打开链接，加入测试。页面会提供 Google Play 的安装入口，从这里安装测试版。
 
-如果你也遇到商品启用了、价格却一直加载，先在手机上检查：
+<img src="/images/blog/google-play-one-time-purchase-testing/console-internal-test.png" alt="内部测试名单和参与测试链接" width="560" loading="lazy" />
 
-1. 打开 **Google Play 商店 → 右上角头像**，确认当前选中的是准备用来购买的账号。
-2. 进入 **设置 → 常规 → 账号和设备偏好设置**。
-3. 找到 **国家/地区和个人资料**，查看带勾的当前地区。
+接着配置许可测试名单。回到 Play Console 的“所有应用”，打开开发者账号的 **设置 → 许可测试**。选择包含这个 Google 账号的电子邮件列表，许可响应保留 `RESPOND_NORMALLY`，然后保存。
 
-<img src="/images/blog/google-play-one-time-purchase-testing/play-country.png" alt="Google Play 账号的国家/地区设置" width="360" loading="lazy" />
+<img src="/images/blog/google-play-one-time-purchase-testing/console-license-test.png" alt="许可测试名单和许可响应设置" width="560" loading="lazy" />
 
-再回到 [Play Console](https://play.google.com/console/) 的 **购买选项和优惠 → 对应购买选项 → 供应情况和定价**，确认这个地区有供应，并核对价格。
+只加入内部测试名单，购买时仍可能真的扣钱。是否已经开通测试付款，要看手机上的 Google Play 付款面板。面板里应出现测试卡，并提示这笔订单不会收费。
 
-需要调整 Play 地区时，按 [Google 的地区设置说明](https://support.google.com/googleplay/answer/7431675?hl=zh-Hans) 核对条件：更改地区要求你位于对应国家或地区，并有当地可用的支付方式。
+### 测试购买
 
-地区核对后，再检查三项：
+打开测试版 App 的购买页面，查看价格是否加载出来，再和后台对应地区的定价比较。这次泰国账号显示的是 THB 150.00。
 
-1. **购买账号**：实际付款的账号是否在内部测试和许可测试两份名单里？多账号手机尤其要检查。Google Play 通常使用下载该应用的账号购买，可在付款面板展开查看。
-2. **商品配置**：代码中的商品 ID 是否一致？商品和购买选项是否已启用？
-3. **手机上的版本**：是否装到了刚发布的测试版？核对版本号，别只凭桌面图标判断。需要重装时，先确认本地数据是否需要备份。
+<img src="/images/blog/google-play-one-time-purchase-testing/localized-price.jpg" alt="App 显示的泰铢价格" width="300" loading="lazy" />
 
-这些配置确认后，把商品查询的响应码和错误信息交给 AI 继续排查。查询已经失败，界面就应该结束加载并提供重试，不能一直转圈。
+如果价格一直在加载，可以先看后面的“常见问题”。价格正常后，点击购买。确认 Google Play 付款面板显示 **“测试卡，一律批准”** 和不收费的提示，再完成这笔测试购买。
 
-价格成功返回后，再与后台该地区的定价核对。例如，这里的泰国地区配置为 THB 150.00，App 应显示同样的币种和金额。
+<img src="/images/blog/google-play-one-time-purchase-testing/test-purchase.jpg" alt="Google Play 测试购买面板" width="300" loading="lazy" />
 
-<img src="/images/blog/google-play-one-time-purchase-testing/localized-price.jpg" alt="App 返回本地化价格：THB 150.00" width="360" loading="lazy" />
+### 权益检查
 
-需要让 AI 核对安装版本时，可以把下面的命令交给它执行。这两条使用本次应用的包名；换项目时替换包名，第一条依赖本机安装的 `rg`。
+付款完成后，回到 App，检查下面几项：
+
+- **Pro 状态**：页面应显示已购买或已解锁，购买入口同步更新。
+- **广告**：打开原本会展示广告的页面，操作一次，检查是否还出现广告或留下空白广告位。
+- **水印**：处理一张图片并导出，打开保存的图片，检查品牌水印是否已经移除。
+- **重启后的状态**：强制停止 App，再打开，检查 Pro 状态和上述功能是否保留。
+
+<img src="/images/blog/google-play-one-time-purchase-testing/pro-unlocked.jpg" alt="购买后的 Pro 状态" width="300" loading="lazy" />
+
+不要只看页面上的“已购买”。付费功能是否生效，要实际用一次才能确认。
+
+### 后台订单
+
+回到 Play Console 的“所有应用”页面，打开左侧的 **订单管理**。用这次购买的订单 ID 或测试账号的完整邮箱搜索，找到后打开订单详情。
+
+核对商品 ID、购买选项、币种和金额。这次的金额是 THB 150.00，还要确认订单时间与测试时间对应。如果后台标注的是“世界协调时间”，需要换算后再比较。
+
+<img src="/images/blog/google-play-one-time-purchase-testing/console-order-detail.png" alt="测试订单的状态、时间和金额" width="440" loading="lazy" />
+
+这笔测试订单在后台显示“已处理”。如果你的订单显示待处理或已退款，可以查看“历史记录”，了解发生了什么。
+
+找不到订单时，先检查订单 ID、购买账号和日期筛选范围，再刷新查询。具体查找方式见 [Google 的订单管理说明](https://support.google.com/googleplay/android-developer/answer/2741495?hl=zh-Hans)。
+
+### 其他测试场景
+
+完成一笔测试购买后，下面几种情况还需要分别验证：
+
+- **取消或付款失败**：不解锁，页面结束等待，用户可以重新发起购买。
+- **等待付款**：先显示等待状态，款项完成后才解锁；取消后恢复可购买状态。
+- **恢复购买**：用同一购买账号重装或换设备，能够找回已购权益，不要求再次付费。
+- **退款并撤销权益**：在后台处理后，让 App 重新同步购买状态，确认付费功能随之更新。
+
+## 4. 常见问题
+
+### 价格一直加载
+
+我这次遇到的主要问题就在这里。商品已经启用，App 里却一直拿不到价格。最初使用的是中国大陆地区的账号，后来换成泰国地区的测试账号，才显示出 THB 150.00，并完成测试购买。
+
+遇到类似情况，可以先检查购买账号的 Play 地区。打开手机上的 **Google Play 商店 → 右上角头像**，确认当前账号。
+
+再进入 **设置 → 常规 → 账号和设备偏好设置 → 国家/地区和个人资料**，查看带勾的当前地区。
+
+<img src="/images/blog/google-play-one-time-purchase-testing/play-country.png" alt="Google Play 账号的国家与地区设置" width="520" loading="lazy" />
+
+然后回到 Play Console 的 **购买选项和优惠 → 对应购买选项 → 供应情况和定价**，确认该地区有供应，并核对价格。
+
+更改 Play 地区有条件限制，例如需要人在当地，并拥有当地可用的支付方式。操作前先看 [Google 的地区设置说明](https://support.google.com/googleplay/answer/7431675?hl=zh-Hans)。
+
+地区只是排查的一项，还需要核对以下内容：
+
+- **实际购买账号**：它是否在这两份测试名单中？多账号手机尤其要留意。Google Play 通常使用下载该应用的账号购买，可以展开付款面板查看。
+- **商品配置**：代码中的商品 ID 是否一致，商品和购买选项是否已启用。
+- **安装版本**：手机上是否是刚发布的测试版。可以核对版本号；需要重装时，先确认本地数据是否需要备份。
+
+使用 adb 时，可以用下面两条命令查看版本号和安装来源。执行前换成自己的包名。第一条需要本机已安装 `rg`。
 
 ```bash
 adb shell dumpsys package com.magic.snapmosaic | rg 'versionCode=|versionName='
 adb shell pm list packages -i com.magic.snapmosaic
 ```
 
-通过 Google Play 安装只是本文采用的测试路径。日常调试时，符合许可测试条件、包名与 Play 配置匹配的调试包也可以直接安装，不必每次改代码都上传。[许可测试账号的调试条件](https://developer.android.com/google/play/billing/test#license-testers)
+这些信息确认后，如果仍然拿不到价格，就检查商品查询的响应码和错误日志，也可以请 AI 协助排查。查询失败后，页面应该结束加载，并提供重试入口。
 
-## 6. 购买后，检查权益和后台订单
+### 付款成功后没有解锁
 
-点击购买，先确认 Google Play 面板显示 **“测试卡，一律批准”**，再完成这笔测试订单。
+先检查 App 有没有收到购买结果，以及订单校验是否通过。购买状态为 `PURCHASED`，并且校验通过后，才能解锁权益，再完成确认购买。`PENDING` 表示仍在等待付款，不能提前解锁。
 
-<img src="/images/blog/google-play-one-time-purchase-testing/test-purchase.jpg" alt="Google Play 测试卡与不收费的测试订单提示" width="360" loading="lazy" />
+如果这些都正常，再看付费状态有没有更新到页面和实际功能。可以结合日志逐步查找，完整流程见 [Google Play Billing 集成说明](https://developer.android.com/google/play/billing/integrate)。
 
-付款面板显示成功后，回到 App，逐项验证：
+### 测试订单自动退款
 
-- **Pro 是否被识别**：页面应切换到已购买或已解锁状态，购买入口同步更新。
-- **广告是否移除**：打开原本会展示广告的页面，实际操作一次，检查是否还出现广告或留下空白广告位。
-- **水印是否移除**：处理一张图片并导出，打开保存的图片，检查品牌水印是否真的消失。不能只看设置页写着“已去水印”。
-- **重启后是否仍有效**：强制停止 App，再打开，检查 Pro 状态和上述功能是否保留。
+如果测试订单过几分钟就被退款，检查有没有漏掉确认购买。许可测试订单如果未被确认，会在约 3 分钟后自动退款。可以查看后台的订单历史，核对退款时间。规则见 [Google 的购买测试说明](https://developer.android.com/google/play/billing/test)。
 
-<img src="/images/blog/google-play-one-time-purchase-testing/pro-unlocked.jpg" alt="Pro 状态应更新为已解锁，再逐项检查对应功能" width="360" loading="lazy" />
+### 调试时的安装方式
 
-### 再到订单管理核对这笔购买
+这次我通过 Google Play 安装内部测试版，一起验证安装和购买流程。日常改代码时，也可以直接安装调试包，不必每次都上传。
 
-回到 [Google Play Console](https://play.google.com/console/) 的“所有应用”页面，在左侧打开 **订单管理**。
-
-在 **“输入订单 ID 或电子邮件地址即可搜索”** 中，输入本次购买的订单 ID；也可以用测试账号的完整邮箱查找。找到记录后，点击右侧箭头打开订单详情。
-
-重点核对三项：
-
-- **是不是这笔购买**：订单时间与测试时间对应，商品 ID 和购买选项与本次配置一致。后台时间如果标注“世界协调时间”，要换算后再对照。
-- **金额是否一致**：币种和金额应与手机付款面板一致，例如这里的 THB 150.00。
-- **订单是否已处理**：成功完成的测试购买应能找到对应记录，并显示“已处理”。如果显示待处理或已退款，继续查看订单的“历史记录”，确认发生了什么。
-
-<img src="/images/blog/google-play-one-time-purchase-testing/console-order-detail.png" alt="订单详情：核对订单状态、日期、金额与测试商品" width="560" loading="lazy" />
-
-如果找不到订单，先核对订单 ID、实际购买账号和日期筛选范围，再刷新查询。查找方式见 [Google 的订单管理说明](https://support.google.com/googleplay/android-developer/answer/2741495?hl=zh-Hans)。
-
-如果支付成功但 Pro 没变化，把购买回调、订单校验和权益状态更新的日志交给 AI 检查。App 需要在校验通过、购买状态为 `PURCHASED` 后授予权益，再完成确认购买；等待付款的 `PENDING` 状态不能提前解锁。
-
-测试订单过几分钟又被退款，也要检查有没有漏掉确认购买。Google 的许可测试订单如果未被确认，会在约 3 分钟后自动退款。[购买测试说明](https://developer.android.com/google/play/billing/test)
-
-## 7. 再补测这几种情况
-
-- **取消或付款失败**：不解锁，页面结束等待，用户可以重新发起购买。
-- **等待付款**：先显示等待状态；款项完成后才解锁，取消后恢复可购买状态。
-- **恢复购买**：用同一购买账号重装或换设备，能够找回已购权益，不要求再次付费。
-- **退款并撤销权益**：在后台处理后，让 App 重新同步购买状态，确认付费功能随之更新。
+直接安装需要满足许可测试条件，调试包的包名也要与 Play 配置一致。具体条件见 [许可测试账号的调试说明](https://developer.android.com/google/play/billing/test#license-testers)。
 
 ## 写在最后
 
-这次的内购代码是 AI 写的，Google Play 后台也能让它帮着操作。放在以前，光是查文档、找示例、弄明白这些配置，就够折腾一阵。
+这次的内购代码是 AI 写的，Google Play 后台也可以让它协助操作。以前接一个没用过的 SDK，查文档、找示例、处理报错，都要花不少时间。现在这些具体的实现问题，已经可以和 AI 一起解决。
 
-我现在觉得，做独立开发，见识更重要了。知道有哪些东西能用，能想到拿来做什么，就值得试一次。至于没接过的 SDK、没用过的后台，可以让 AI 一起解决，已经没必要因为这些就把一个想法搁下了。
+我现在觉得，做独立开发，见识和想法更重要了。知道有哪些能力可以用，能想到拿来解决什么问题，这些在 AI 盛行的当下更珍贵。AI 让实现变得容易了，但做什么、为什么做，还是要靠自己的观察和判断。
 
 参考资料：
 
