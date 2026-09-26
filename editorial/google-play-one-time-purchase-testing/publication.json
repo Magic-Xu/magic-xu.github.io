@@ -3,18 +3,19 @@
   "preparedAt": "2026-09-07",
   "website": {
     "source": "src/content/blog/google-play-one-time-purchase-testing.md",
-    "sha256": "0fab8c79ecf300a5c5ae2a7746ced2a1c46be5adebb66730db190c353bc98bf7",
+    "sha256": "41abe3e854184362d09b79e8664e657efaf5516e2782c3428aeb0d0e2a939f19",
     "status": "published",
     "publishedUrl": "https://magic-xu.github.io/writing/google-play-one-time-purchase-testing/",
-    "publishedAt": "2026-09-08"
+    "publishedAt": "2026-09-08",
+    "updatedAt": "2026-09-26"
   },
   "wechat": {
     "source": "editorial/google-play-one-time-purchase-testing/wechat.md",
-    "adaptedFromSha256": "0fab8c79ecf300a5c5ae2a7746ced2a1c46be5adebb66730db190c353bc98bf7",
-    "status": "local-draft",
+    "adaptedFromSha256": "41abe3e854184362d09b79e8664e657efaf5516e2782c3428aeb0d0e2a939f19",
+    "status": "published",
     "accountName": "小麦在野",
-    "title": "独立 App 开发系列：用 AI 接入 Google Play 一次性内购",
-    "summary": "代码交给 AI，配置和验收怎么做？附接入提示词、后台与手机配图，重点排查 Play 账号地区，再验证价格、购买、Pro 权益和订单。",
+    "title": "独立 App 开发系列：Google Play 一次性内购接入实践",
+    "summary": "给 Android App 增加永久 Pro，需要完成哪些接入、后台配置和测试？这篇结合实际截图，记录一次性内购的完整过程，以及价格加载和购买状态的常见问题。",
     "publishedUrl": null,
     "publishedAt": null,
     "applicationIdentity": "anonymized",
@@ -28,6 +29,73 @@
       "editorial/google-play-one-time-purchase-testing/assets/wechat/test-purchase.png",
       "editorial/google-play-one-time-purchase-testing/assets/wechat/pro-unlocked.png",
       "editorial/google-play-one-time-purchase-testing/assets/wechat/console-order-detail.png"
-    ]
+    ],
+    "preview": "editorial/google-play-one-time-purchase-testing/wechat-review.html",
+    "syncSource": "editorial/google-play-one-time-purchase-testing/wechat-sync.html",
+    "cover": "editorial/google-play-one-time-purchase-testing/assets/juejin-cover.png",
+    "publicationVerification": {
+      "method": "user-confirmed",
+      "confirmedAt": "2026-09-26",
+      "scope": "publication-status"
+    },
+    "sourceSha256": "3732bd4b73d4a78d2f18f71757ed7e31faffcf6954b1554e1783adf04f1da6e5"
+  },
+  "reviewedAt": "2026-09-08",
+  "juejin": {
+    "source": "editorial/google-play-one-time-purchase-testing/juejin.md",
+    "adaptedFromSha256": "41abe3e854184362d09b79e8664e657efaf5516e2782c3428aeb0d0e2a939f19",
+    "status": "published",
+    "title": "独立 App 开发系列：Google Play 一次性内购接入实践",
+    "summary": "给 Android App 接入 Google Play 永久 Pro，记录商品配置、测试账号设置和真机购买流程。附操作截图与接入提示词，分享价格加载、恢复购买和订单状态的排查经验。",
+    "tags": [
+      "Android",
+      "Google"
+    ],
+    "preview": "editorial/google-play-one-time-purchase-testing/juejin-review.html",
+    "publishedUrl": "https://juejin.cn/spost/7683079867370373158",
+    "publishedAt": null,
+    "applicationIdentity": "anonymized",
+    "assets": [
+      "editorial/google-play-one-time-purchase-testing/assets/wechat/console-product-form.png",
+      "editorial/google-play-one-time-purchase-testing/assets/wechat/console-region-price.png",
+      "editorial/google-play-one-time-purchase-testing/assets/wechat/console-internal-test.png",
+      "editorial/google-play-one-time-purchase-testing/assets/wechat/console-license-test.png",
+      "editorial/google-play-one-time-purchase-testing/assets/wechat/play-country.png",
+      "editorial/google-play-one-time-purchase-testing/assets/wechat/localized-price.png",
+      "editorial/google-play-one-time-purchase-testing/assets/wechat/test-purchase.png",
+      "editorial/google-play-one-time-purchase-testing/assets/wechat/pro-unlocked.png",
+      "editorial/google-play-one-time-purchase-testing/assets/wechat/console-order-detail.png"
+    ],
+    "accountName": "小麦在野",
+    "draftUrl": "https://juejin.cn/editor/drafts/7683086663757086770",
+    "draftVerifiedAt": "2026-09-08T18:18:02+00:00",
+    "draftSourceSha256": "6b6b1d7e56fd059a62175f79864acd29c7677c7a27750b58f637eb6d65d8182a",
+    "draftImageVerification": {
+      "status": "passed",
+      "method": "saved-and-reopened-browser-preview",
+      "imageCount": 9,
+      "displayWidths": [
+        500,
+        560,
+        560,
+        560,
+        300,
+        300,
+        300,
+        440,
+        520
+      ],
+      "allLoaded": true,
+      "allCentered": true
+    },
+    "category": "Android",
+    "submittedAt": "2026-09-09T01:12:02.660191+00:00",
+    "cover": "editorial/google-play-one-time-purchase-testing/assets/juejin-cover.png",
+    "publicationVerification": {
+      "method": "user-confirmed",
+      "confirmedAt": "2026-09-26",
+      "scope": "publication-status"
+    },
+    "sourceSha256": "6b6b1d7e56fd059a62175f79864acd29c7677c7a27750b58f637eb6d65d8182a"
   }
 }

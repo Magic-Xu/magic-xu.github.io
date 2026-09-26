@@ -1,0 +1,8 @@
+{
+  "generator": "Built-in image_gen",
+  "date": "2026-09-10",
+  "prompt": "Use case: ads-marketing.\nAsset type: WeChat Official Account article cover, ultra-wide landscape banner. Exact output canvas 2256 × 960 pixels (2.35:1).\nInput image: visual style and content reference for the existing article cover.\nPrimary request: Recompose this cover into a finished wide banner for the same article about Google Play one-time in-app purchases. Preserve the clean white / pale blue background, dark navy typography, and mint-green unlocked padlock with checkmark on a smartphone. Re-layout the elements naturally for the wide canvas; do not simply stretch or crop the reference.\nText (verbatim, only these two lines): \"Google Play\" and \"一次性内购\". Google Play is a smaller heading, 一次性内购 is the main large bold Chinese title.\nComposition: text occupies the left half, a compact elegant dimensional phone and unlocked padlock occupy the right half. Keep the entire title and all letters comfortably inside the frame with at least 9% outer safe margins. Phone should fit inside the height, not run off the top or bottom. Strong readability at small thumbnail size, generous breathing room, minimal decoration, crisp professional editorial feel.\nConstraints: accurately preserve Chinese text, no extra slogans, no prices, no currency, no app-specific branding, no screenshots, no extra logos, no watermarks. Return a single finished landscape cover, not a mockup or contact sheet.",
+  "reference_image": "editorial/google-play-one-time-purchase-testing/assets/juejin-cover.png",
+  "width": 1923,
+  "height": 818
+}

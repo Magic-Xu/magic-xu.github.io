@@ -1,7 +1,5 @@
 # 独立 App 开发系列：Google Play 一次性内购接入实践
 
-**阅读时间：约 10 分钟**
-
 **适用读者：** 准备给 Android App 接入 Google Play 内购，或正在配置和测试一次性付费功能的开发者。
 
 **文章收获：** 看懂商品和测试账号的配置，知道购买后该检查什么，也能排查价格和购买状态的问题。附接入提示词和操作截图。
@@ -30,7 +28,7 @@ Google Play 的 Billing SDK 已经提供了商品与价格查询、购买支付�
 
 ## 2. 管理后台配置
 
-商品卖多少钱、在哪些地区销售，都要在 Google Play Console 开发者后台[1] 配置。App 通过商品 ID 查询这些信息。
+商品卖多少钱、在哪些地区销售，都要在 [Google Play Console 开发者后台](https://play.google.com/console/) 配置。App 通过商品 ID 查询这些信息。
 
 ### 测试包
 
@@ -136,7 +134,7 @@ Google Play 的 Billing SDK 已经提供了商品与价格查询、购买支付�
 
 这笔测试订单在后台显示“已处理”。如果你的订单显示待处理或已退款，可以查看“历史记录”，了解发生了什么。
 
-找不到订单时，先检查订单 ID、购买账号和日期筛选范围，再刷新查询。具体查找方式见 Google 的订单管理说明[2]。
+找不到订单时，先检查订单 ID、购买账号和日期筛选范围，再刷新查询。具体查找方式见 [Google 的订单管理说明](https://support.google.com/googleplay/android-developer/answer/2741495?hl=zh-Hans)。
 
 ### 其他测试场景
 
@@ -163,7 +161,7 @@ Google Play 的 Billing SDK 已经提供了商品与价格查询、购买支付�
 
 然后回到 Play Console 的 **购买选项和优惠 → 对应购买选项 → 供应情况和定价**，确认该地区有供应，并核对价格。
 
-更改 Play 地区有条件限制，例如需要人在当地，并拥有当地可用的支付方式。操作前先看 Google 的地区设置说明[3]。
+更改 Play 地区有条件限制，例如需要人在当地，并拥有当地可用的支付方式。操作前先看 [Google 的地区设置说明](https://support.google.com/googleplay/answer/7431675?hl=zh-Hans)。
 
 地区只是排查的一项，还需要核对以下内容：
 
@@ -171,23 +169,30 @@ Google Play 的 Billing SDK 已经提供了商品与价格查询、购买支付�
 - **商品配置**：代码中的商品 ID 是否一致，商品和购买选项是否已启用。
 - **安装版本**：手机上是否是刚发布的测试版。可以核对版本号；需要重装时，先确认本地数据是否需要备份。
 
+使用 adb 时，可以用下面两条命令查看版本号和安装来源。执行前换成自己的包名。第一条需要本机已安装 `rg`。
+
+```bash
+adb shell dumpsys package com.example.app | rg 'versionCode=|versionName='
+adb shell pm list packages -i com.example.app
+```
+
 这些信息确认后，如果仍然拿不到价格，就检查商品查询的响应码和错误日志，也可以请 AI 协助排查。查询失败后，页面应该结束加载，并提供重试入口。
 
 ### 付款成功后没有解锁
 
 先检查 App 有没有收到购买结果，以及订单校验是否通过。购买状态为 `PURCHASED`，并且校验通过后，才能解锁权益，再完成确认购买。`PENDING` 表示仍在等待付款，不能提前解锁。
 
-如果这些都正常，再看付费状态有没有更新到页面和实际功能。可以结合日志逐步查找，完整流程见 Google Play Billing 集成说明[4]。
+如果这些都正常，再看付费状态有没有更新到页面和实际功能。可以结合日志逐步查找，完整流程见 [Google Play Billing 集成说明](https://developer.android.com/google/play/billing/integrate)。
 
 ### 测试订单自动退款
 
-如果测试订单过几分钟就被退款，检查有没有漏掉确认购买。许可测试订单如果未被确认，会在约 3 分钟后自动退款。可以查看后台的订单历史，核对退款时间。规则见 Google 的购买测试说明[5]。
+如果测试订单过几分钟就被退款，检查有没有漏掉确认购买。许可测试订单如果未被确认，会在约 3 分钟后自动退款。可以查看后台的订单历史，核对退款时间。规则见 [Google 的购买测试说明](https://developer.android.com/google/play/billing/test)。
 
 ### 调试时的安装方式
 
 这次我通过 Google Play 安装内部测试版，一起验证安装和购买流程。日常改代码时，也可以直接安装调试包，不必每次都上传。
 
-直接安装需要满足许可测试条件，调试包的包名也要与 Play 配置一致。具体条件见 许可测试账号的调试说明[6]。
+直接安装需要满足许可测试条件，调试包的包名也要与 Play 配置一致。具体条件见 [许可测试账号的调试说明](https://developer.android.com/google/play/billing/test#license-testers)。
 
 ## 写在最后
 
@@ -195,32 +200,8 @@ Google Play 的 Billing SDK 已经提供了商品与价格查询、购买支付�
 
 我现在觉得，做独立开发，见识和想法更重要了。知道有哪些能力可以用，能想到拿来解决什么问题，这些在 AI 盛行的当下更珍贵。AI 让实现变得容易了，但做什么、为什么做，还是要靠自己的观察和判断。
 
-参考资料（复制网址到浏览器打开）：
+参考资料：
 
-[1] Google Play Console 开发者后台
-
-<span style="overflow-wrap:anywhere;word-break:break-all;">https://play.google.com/console/</span>
-
-[2] Google 的订单管理说明
-
-<span style="overflow-wrap:anywhere;word-break:break-all;">https://support.google.com/googleplay/android-developer/answer/2741495?hl=zh-Hans</span>
-
-[3] Google 的地区设置说明
-
-<span style="overflow-wrap:anywhere;word-break:break-all;">https://support.google.com/googleplay/answer/7431675?hl=zh-Hans</span>
-
-[4] Google Play Billing 集成说明
-
-<span style="overflow-wrap:anywhere;word-break:break-all;">https://developer.android.com/google/play/billing/integrate</span>
-
-[5] Google 的购买测试说明
-
-<span style="overflow-wrap:anywhere;word-break:break-all;">https://developer.android.com/google/play/billing/test</span>
-
-[6] 许可测试账号的调试说明
-
-<span style="overflow-wrap:anywhere;word-break:break-all;">https://developer.android.com/google/play/billing/test#license-testers</span>
-
-[7] 一次性商品配置说明
-
-<span style="overflow-wrap:anywhere;word-break:break-all;">https://support.google.com/googleplay/android-developer/answer/16430488</span>
+- [Google Play Billing 集成与购买处理](https://developer.android.com/google/play/billing/integrate)
+- [Google Play Billing 测试说明](https://developer.android.com/google/play/billing/test)
+- [一次性商品配置说明](https://support.google.com/googleplay/android-developer/answer/16430488)
