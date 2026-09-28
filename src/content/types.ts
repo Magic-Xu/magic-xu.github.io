@@ -26,6 +26,15 @@ export interface ProjectItem {
 	}[];
 }
 
+export interface SmallWorkItem {
+	id: "yinyue" | "fanren" | "daily-skills" | "obsidian";
+	name: string;
+	category: string;
+	description: string;
+	linkLabel: string;
+	linkHref: string;
+}
+
 export interface LocaleContent {
 	navigation: NavItem[];
 	home: {
@@ -62,6 +71,7 @@ export interface LocaleContent {
 		metaDescription: string;
 		title: string;
 		items: ProjectItem[];
+		smallWorks: SmallWorkItem[];
 	};
 	writing: {
 		featuredPostId: string;

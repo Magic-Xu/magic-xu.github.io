@@ -1,6 +1,7 @@
 ---
 import { getLocaleContent } from "../content";
 import ProjectCard from "../components/ProjectCard.astro";
+import SmallWorks from "../components/SmallWorks.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Arrow from "../components/Arrow.astro";
 
@@ -26,6 +27,7 @@ const featuredLinks = featured.links ?? (featured.linkHref && featured.linkLabel
 			<div class="project-index">
 				{remaining.map((project, index) => <ProjectCard {...project} index={index + 2} />)}
 			</div>
+			<SmallWorks items={projects.smallWorks} />
 		</div>
 	</section>
 </BaseLayout>

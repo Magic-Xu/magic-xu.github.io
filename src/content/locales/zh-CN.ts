@@ -57,7 +57,7 @@ export const zhCN: LocaleContent = {
 	projects: {
 		featuredName: "SnapMosaic",
 		metaTitle: "作品",
-		metaDescription: "进行中的项目与工程实践",
+		metaDescription: "小麦的独立产品、开源项目、生活工具与兴趣创作。",
 		title: "作品",
 		items: [
 			{
@@ -76,22 +76,36 @@ export const zhCN: LocaleContent = {
 				]
 			},
 			{
+				name: "LifeOS",
+				status: "公开模板",
+				tagline: "记录生活，让 AI 帮忙整理。",
+				description:
+					"用 Obsidian 记录生活，用 Codex 整理、检索和回顾。公开模板包含目录、记录模板、规则和脚本，可以用来建立自己的个人知识库。",
+				stack: ["Obsidian", "Markdown", "Codex"],
+				linkHref: "https://github.com/Magic-Xu/LifeOS_Template",
+				linkLabel: "获取模板"
+			},
+			{
 				name: "MeloNest",
 				status: "开发中",
 				tagline: "生成音乐，整理自己的曲库。",
 				description:
 					"一个面向 AI 音乐生成与本地导入播放的轻量音乐 App，围绕生成、导入、本地曲库、播放与导出形成最小闭环。",
-				stack: ["Kotlin", "Android", "Jetpack Compose", "AI Music", "Local-first"]
+				stack: ["Kotlin", "Android", "Jetpack Compose", "AI Music", "Local-first"],
+				linkHref: "https://magic-xu.github.io/MeloNestLegal/",
+				linkLabel: "产品网站"
 			},
 			{
-				name: "App Dev Skills",
-				tagline: "独立 App 开发的技能工具集。",
-				status: "开源 / 维护中",
+				name: "Magic App Dev",
+				tagline: "独立 App 开发的 Codex 工作流。",
+				status: "可安装 / 持续迭代",
 				description:
-					"一套从独立 App 开发实践中沉淀的 Codex skills，覆盖 local-first Android App 启动、架构守护、设备 QA 和 GitHub 发布流程。",
-				stack: ["Codex Skills", "Android", "MVI", "Jetpack Compose", "Workflow"],
-				linkHref: "https://github.com/Magic-Xu/app-dev-skills",
-				linkLabel: "查看项目"
+					"把需求调研、开发验证、Google Play 发布准备和上线后的分析，整理成可复用的 Codex 插件。",
+				stack: ["Codex", "Android", "Google Play"],
+				links: [
+					{ label: "查看插件", href: "https://github.com/Magic-Xu/magic-app-dev-plugin" },
+					{ label: "配套工程工具", href: "https://github.com/Magic-Xu/magic-android-platform" }
+				]
 			},
 			{
 				name: "Pulse",
@@ -102,6 +116,40 @@ export const zhCN: LocaleContent = {
 				stack: ["Kotlin", "Android", "MVI", "Jetpack Compose"],
 				linkHref: "https://github.com/Magic-Xu/pulse",
 				linkLabel: "查看项目"
+			}
+		],
+		smallWorks: [
+			{
+				id: "yinyue",
+				name: "银月",
+				category: "Codex 宠物 · 同人创作",
+				description: "给 Codex 做的一只桌面宠物。",
+				linkLabel: "预览与安装",
+				linkHref: "https://github.com/Magic-Xu/codex-pets"
+			},
+			{
+				id: "fanren",
+				name: "凡人 · 角色造型集",
+				category: "AI 图像 · 同人创作",
+				description: "八位角色，十六张 Q 版手办成图。",
+				linkLabel: "打开造型集",
+				linkHref: "https://magic-xu.github.io/fanren-character-gallery/"
+			},
+			{
+				id: "daily-skills",
+				name: "Magic Daily Skills",
+				category: "日常工具",
+				description: "写文章、做调研、整理工作目录时用到的 Codex Skills。",
+				linkLabel: "查看工具集",
+				linkHref: "https://github.com/Magic-Xu/MagicDailySkills"
+			},
+			{
+				id: "obsidian",
+				name: "Magic Obsidian",
+				category: "工作台预设",
+				description: "把自己用的 Obsidian 配色、布局和工作台整理成可复用的预设。",
+				linkLabel: "查看预设",
+				linkHref: "https://github.com/Magic-Xu/magic-obsidian"
 			}
 		]
 	},
