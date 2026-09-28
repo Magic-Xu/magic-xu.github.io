@@ -3,8 +3,8 @@ import { Image } from "astro:assets";
 import Arrow from "./Arrow.astro";
 import type { SmallWorkItem } from "../content/types";
 import silverPet from "../assets/projects/yinyue-spritesheet.webp";
-import hanli from "../assets/projects/hanli.png";
-import silverFigure from "../assets/projects/fanren-yinyue.png";
+import yuanyao from "../assets/projects/yuanyao.png";
+import meining from "../assets/projects/meining.png";
 import obsidian from "../assets/projects/obsidian.png";
 
 interface Props { items: SmallWorkItem[] }
@@ -23,8 +23,8 @@ const tools = items.filter((item) => item.id === "daily-skills" || item.id === "
           <span class="pet-invitation">打个招呼</span>
         </button> :
         <a class="figure-preview" href={item.linkHref} target="_blank" rel="noreferrer" aria-label="打开凡人角色造型集">
-          <Image src={hanli} width={480} format="webp" alt="韩立的黑袍角色造型" loading="lazy" />
-          <Image src={silverFigure} width={480} format="webp" alt="银月的白衣角色造型" loading="lazy" />
+          <Image src={yuanyao} width={480} format="webp" alt="元瑶的黑袍银冠角色造型" loading="lazy" />
+          <Image src={meining} width={480} format="webp" alt="梅凝的青绿衣装角色造型" loading="lazy" />
         </a>
       }
       <div class="work-caption">
