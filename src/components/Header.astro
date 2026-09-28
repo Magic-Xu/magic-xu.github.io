@@ -17,7 +17,7 @@ const isActive = (href: string) => {
 
 <header class:list={["site-header", home && "site-header-hero"]}>
 	<div class="container header-inner">
-		<a class="site-brand" href="/" data-astro-prefetch="load"><span>{siteConfig.title}</span><span class="brand-alias" lang="en">MagicXu</span></a>
+		{!home && <a class="site-brand" href="/" data-astro-prefetch="load"><span>{siteConfig.title}</span><span class="brand-alias" lang="en">MagicXu</span></a>}
 		<nav class="site-nav" aria-label="主导航">
 			{links.map((item) => (
 				<a

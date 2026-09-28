@@ -37,6 +37,7 @@ ul { margin: 0; padding: 0; }
 .nav-link::after { content: ""; position: absolute; bottom: 3px; left: 0; right: 2px; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform .2s ease; }
 .nav-link:hover::after, .nav-link.active::after { transform: scaleX(1); }
 .site-header-hero { position: absolute; inset: 0 0 auto; color: #f3f0de; background: transparent; border: 0; }
+.site-header-hero .header-inner { justify-content: flex-end; }
 .site-header-hero .site-nav { color: #27392e; }
 .home-hero { position: relative; min-height: 674px; height: min(750px, 46.81vw); color: #f5f1de; isolation: isolate; }
 .hero-landscape { position: absolute; inset: 0; z-index: -2; background: #183a31; }
