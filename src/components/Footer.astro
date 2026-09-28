@@ -1,20 +1,7 @@
 ---
-import { getLocaleContent } from "../content";
 import { siteConfig } from "../data/site";
-
-const year = new Date().getFullYear();
-const content = getLocaleContent();
 ---
-
-<footer class="site-footer">
-	<div class="container footer-inner">
-		<div>
-			<p class="footer-copy">© {year} {siteConfig.title}. {content.footer.note}</p>
-			<p class="footer-note">{siteConfig.description}</p>
-		</div>
-		<div class="footer-links">
-			<a href={siteConfig.github} target="_blank" rel="noreferrer">{content.footer.githubLabel}</a>
-			<a href={`mailto:${siteConfig.email}`}>{content.footer.emailLabel}</a>
-		</div>
-	</div>
-</footer>
+<footer class="site-footer"><div class="container footer-inner">
+  <p>在技术与生活的旷野里，持续探索。</p>
+  <nav class="footer-links" aria-label="保持联系"><a href="/about/#connect">公众号</a><a href={siteConfig.github} target="_blank" rel="noreferrer">GitHub</a><a href="/rss.xml">RSS</a></nav>
+</div></footer>

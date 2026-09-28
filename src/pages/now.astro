@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Arrow from "../components/Arrow.astro";
+---
+<BaseLayout metaTitle="近况" metaDescription="最近在做的产品、AI 实践和写作。">
+  <section class="section"><div class="container personal-page">
+    <header class="page-heading" data-reveal-group><p class="eyebrow" lang="en">NOW</p><h1 class="page-title">最近在做什么</h1><p class="page-desc">把注意力放在具体的事情上，边做边学。</p><p class="meta-line">更新于 <time datetime="2026-09-28">2026 年 9 月 28 日</time></p></header>
+    <div class="personal-prose">
+      <section><h2>继续打磨自己的产品</h2><p>围绕 SnapMosaic 的真实使用场景做迭代。从开发到上架，再到寻找用户，每一环都有新的问题要解决。</p><a class="text-link" href="/projects/#snapmosaic">看看我的作品 <Arrow /></a></section>
+      <section><h2>把 AI 用进日常实践</h2><p>探索 AI 编程、智能体和个人知识管理。关心它们具体能帮我做什么，也记录使用中的限制和踩坑。</p></section>
+      <section><h2>把经历写下来</h2><p>整理独立 App 开发的实践，发布在这里和公众号「小麦在野」。希望自己走过的弯路，能给后来的人一些参考。</p><a class="text-link" href="/writing/">读最近的文章 <Arrow /></a></section>
+    </div>
+  </div></section>
+</BaseLayout>

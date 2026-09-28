@@ -1,49 +1,15 @@
 ---
-import { getLocaleContent } from "../content";
 import BaseLayout from "../layouts/BaseLayout.astro";
-
-const content = getLocaleContent();
-const { about } = content;
+import { siteConfig } from "../data/site";
+import Arrow from "../components/Arrow.astro";
 ---
-
-<BaseLayout metaTitle={about.metaTitle} metaDescription={about.metaDescription}>
-	<section class="section about-section">
-		<div class="container">
-			<header class="about-intro" data-reveal-group>
-				<h1 class="page-title about-title">{about.title}</h1>
-				<section aria-labelledby="about-summary">
-					<h2 id="about-summary">{about.summaryTitle}</h2>
-					<p class="page-desc">{about.description}</p>
-				</section>
-			</header>
-
-			<section class="about-block work-block" aria-labelledby="about-work">
-				<h2 id="about-work">{about.workTitle}</h2>
-				<div class="company-wall" aria-label="工作经历公司">
-					{about.work.companies.map((company) => (
-						<div class:list={["company-item", company.variant && `company-logo-${company.variant}`]}>
-							<div class="company-logo-frame">
-								<img src={company.logo} alt={`${company.name} icon`} />
-							</div>
-							<p>{company.name}</p>
-						</div>
-					))}
-				</div>
-			</section>
-
-			<section class="about-block" aria-labelledby="about-keywords">
-				<h2 id="about-keywords">{about.keywordsTitle}</h2>
-				<ul class="info-list keyword-list">
-					{about.keywords.map((keyword) => <li>{keyword}</li>)}
-				</ul>
-			</section>
-
-			<section class="about-block" aria-labelledby="about-focuses">
-				<h2 id="about-focuses">{about.focusTitle}</h2>
-				<ul class="info-list focus-list">
-					{about.focuses.map((focus) => <li>{focus}</li>)}
-				</ul>
-			</section>
-		</div>
-	</section>
+<BaseLayout metaTitle="关于" metaDescription="认识小麦：十年研发，保持好奇。做自己的产品，探索更自由的工作与生活。">
+  <section class="section"><div class="container personal-page">
+    <header class="page-heading" data-reveal-group><p class="eyebrow" lang="en">ABOUT</p><h1 class="page-title">你好，我是小麦。</h1><p class="page-desc">也叫 MagicXu。独立开发者，AI 探索者。</p></header>
+    <div class="personal-prose">
+      <section><h2>十年研发，保持好奇。</h2><p>从 Android 开发开始，我在乐逗游戏、OPPO、腾讯、拼多多和字节跳动做过研发。一路接触复杂客户端、性能与稳定性，也参与过 AI 产品的开发。</p><p>现在，我也在做自己的产品。把一个想法变成能被使用的东西，再面对真实的反馈，这个过程让我一直保持兴趣。</p><a class="text-link" href="/projects/">我做的东西 <Arrow /></a></section>
+      <section><h2>记录真实的探索。</h2><p>这里写 AI 实践、独立开发，以及从想法到上线的具体经历。做成了什么，哪里走了弯路，还有哪些问题没想明白，都值得认真记下来。</p><p>我希望能以自己喜欢的方式度过一生。让工作更自由，留出时间去旅行、去体验生活，也是我正在探索的方向。</p><a class="text-link" href="/now/">看看我的近况 <Arrow /></a></section>
+      <section id="connect"><h2>保持联系</h2><p>在微信搜索公众号「小麦在野」，可以读到我的文章。也欢迎通过邮件交流。</p><div class="contact-links"><a class="text-link" href={`mailto:${siteConfig.email}`}>写封邮件 <Arrow direction="up-right" /></a><a class="text-link" href={siteConfig.github} target="_blank" rel="noreferrer">GitHub <Arrow direction="up-right" /></a><a class="text-link" href="/rss.xml">订阅 RSS <Arrow /></a></div></section>
+    </div>
+  </div></section>
 </BaseLayout>

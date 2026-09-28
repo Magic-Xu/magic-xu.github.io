@@ -3,9 +3,10 @@ import { siteConfig } from "../../data/site";
 
 export const zhCN: LocaleContent = {
 	navigation: [
-		{ href: "/projects", label: "Projects" },
-		{ href: "/writing", label: "Writing" },
-		{ href: "/about", label: "About" }
+		{ href: "/writing/", label: "文章" },
+		{ href: "/projects/", label: "作品" },
+		{ href: "/now/", label: "近况" },
+		{ href: "/about/", label: "关于" }
 	],
 	home: {
 		metaTitle: "首页",
@@ -17,15 +18,15 @@ export const zhCN: LocaleContent = {
 			"我长期专注 Android 工程实践，也持续在 AI 产品方向做实验。相比追逐概念，我更在意问题边界是否清晰、方案是否可维护，以及结果能否被真实使用。对我来说，工程的价值在于把想法打磨成稳定、可交付的产品。",
 		actions: [
 			{ href: siteConfig.github, label: "GitHub", external: true, variant: "primary" },
-			{ href: "/projects", label: "Projects", variant: "secondary" },
-			{ href: "/writing", label: "Writing", variant: "secondary" },
-			{ href: "/about", label: "About", variant: "secondary" }
+			{ href: "/projects", label: "作品", variant: "secondary" },
+			{ href: "/writing", label: "文章", variant: "secondary" },
+			{ href: "/about", label: "关于", variant: "secondary" }
 		]
 	},
 	about: {
-		metaTitle: "About",
+		metaTitle: "关于",
 		metaDescription: "关于 MagicXu 的工作方向与技术关注",
-		title: "About",
+		title: "关于",
 		description:
 			"我是 MagicXu，长期专注 Android 工程实践，同时在 AI 产品方向持续探索。偏好用工程方法解决真实问题，并把结果打磨成可交付的产品。",
 		summaryTitle: "简介",
@@ -55,21 +56,21 @@ export const zhCN: LocaleContent = {
 		]
 	},
 	projects: {
-		metaTitle: "Projects",
+		metaTitle: "作品",
 		metaDescription: "进行中的项目与工程实践",
-		title: "Projects",
+		title: "作品",
 		description: "进行中的项目、实验和长期迭代方向。",
 		items: [
 			{
 				name: "SnapMosaic",
 				status: "已上线 / 迭代中",
-				tagline: "Private photo masking, on device.",
+				tagline: "在设备上，保护照片隐私。",
 				description:
-					"A local-first privacy image editor for quickly masking faces, names, license plates, receipts, screenshots, and other sensitive details before sharing.",
+					"一款本地优先的图片隐私工具。在分享照片和截图前，遮挡人脸、姓名、车牌和票据信息。",
 				stack: ["Android", "Privacy", "Local-first", "Product Design"],
 				theme: "dark",
 				links: [
-					{ label: "Website", href: "https://magic-xu.github.io/mosaic-legal/" },
+					{ label: "产品网站", href: "https://magic-xu.github.io/mosaic-legal/" },
 					{ label: "Google Play", href: "https://play.google.com/store/apps/details?id=com.magic.snapmosaic" },
 					{ label: "X / Twitter", href: "https://x.com/snapmosaic_app" }
 				]
@@ -77,7 +78,7 @@ export const zhCN: LocaleContent = {
 			{
 				name: "MeloNest",
 				status: "开发中",
-				tagline: "AI music generation, kept in your local library.",
+				tagline: "生成音乐，整理自己的曲库。",
 				description:
 					"一个面向 AI 音乐生成与本地导入播放的轻量音乐 App，围绕生成、导入、本地曲库、播放与导出形成最小闭环。",
 				stack: ["Kotlin", "Android", "Jetpack Compose", "AI Music", "Local-first"]
@@ -103,9 +104,9 @@ export const zhCN: LocaleContent = {
 		]
 	},
 	writing: {
-		metaTitle: "Writing",
+		metaTitle: "文章",
 		metaDescription: "工程实践、AI 产品与独立开发写作",
-		title: "Writing",
+		title: "文章",
 		description: "记录 Android 工程、AI 实践与产品思考。",
 		hint: "",
 		emptyMessage: "暂时还没有可展示的文章。"

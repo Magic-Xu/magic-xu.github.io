@@ -1,4 +1,5 @@
 ---
+import Arrow from "./Arrow.astro";
 interface Props {
 	name: string;
 	description: string;
@@ -30,7 +31,7 @@ const projectId = name.toLowerCase().replaceAll(" ", "-");
 			<div class="project-links">
 				{projectLinks.map((item) => {
 					const isExternal = item.href.startsWith("http");
-					return <a class="text-link" href={item.href} target={isExternal ? "_blank" : undefined} rel={isExternal ? "noreferrer" : undefined}>{item.label} <span aria-hidden="true">→</span></a>;
+					return <a class="text-link" href={item.href} target={isExternal ? "_blank" : undefined} rel={isExternal ? "noreferrer" : undefined}>{item.label} <Arrow /></a>;
 				})}
 			</div>
 		)}
