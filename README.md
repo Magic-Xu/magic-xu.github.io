@@ -17,7 +17,7 @@ npm run dev
 
 - `src/content/blog/`：Markdown 文章；`draft: true` 的文章不会出现在列表、详情或 RSS 中。
 - `src/pages/index.astro`：首页介绍与最近两篇文章。
-- `src/pages/about.astro`、`src/pages/now.astro`：个人介绍与近况。更新近况时同步修改页面日期。
+- `src/pages/about.astro`：个人介绍与联系方式。
 - `src/content/locales/zh-CN.ts`：导航、作品及文章列表文案。
 - `src/data/site.ts`：网站地址、作者和公开联系方式。
 - `/rss.xml`：按发布时间生成的文章摘要订阅源。
