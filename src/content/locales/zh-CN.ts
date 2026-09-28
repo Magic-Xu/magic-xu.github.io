@@ -55,13 +55,14 @@ export const zhCN: LocaleContent = {
 		]
 	},
 	projects: {
+		featuredName: "SnapMosaic",
 		metaTitle: "作品",
 		metaDescription: "进行中的项目与工程实践",
 		title: "作品",
-		description: "进行中的项目、实验和长期迭代方向。",
 		items: [
 			{
 				name: "SnapMosaic",
+				category: "Android 应用",
 				status: "已上线 / 迭代中",
 				tagline: "在设备上，保护照片隐私。",
 				description:
@@ -84,6 +85,7 @@ export const zhCN: LocaleContent = {
 			},
 			{
 				name: "App Dev Skills",
+				tagline: "独立 App 开发的技能工具集。",
 				status: "开源 / 维护中",
 				description:
 					"一套从独立 App 开发实践中沉淀的 Codex skills，覆盖 local-first Android App 启动、架构守护、设备 QA 和 GitHub 发布流程。",
@@ -93,6 +95,7 @@ export const zhCN: LocaleContent = {
 			},
 			{
 				name: "Pulse",
+				tagline: "轻量 MVI 架构实践。",
 				status: "进行中",
 				description:
 					"一个面向 Android 的轻量 MVI 架构实践，强调状态流可读、模块边界清晰和工程落地成本可控。",
@@ -103,11 +106,10 @@ export const zhCN: LocaleContent = {
 		]
 	},
 	writing: {
+		featuredPostId: "google-play-closed-testing",
 		metaTitle: "文章",
 		metaDescription: "工程实践、AI 产品与独立开发写作",
 		title: "文章",
-		description: "记录 Android 工程、AI 实践与产品思考。",
-		hint: "",
 		emptyMessage: "暂时还没有可展示的文章。"
 	},
 	footer: {

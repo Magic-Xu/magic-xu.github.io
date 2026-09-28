@@ -16,6 +16,7 @@ export interface ProjectItem {
 	description: string;
 	stack: string[];
 	tagline?: string;
+	category?: string;
 	theme?: "dark" | "light";
 	linkHref?: string;
 	linkLabel?: string;
@@ -56,18 +57,17 @@ export interface LocaleContent {
 		focuses: string[];
 	};
 	projects: {
+		featuredName: string;
 		metaTitle: string;
 		metaDescription: string;
 		title: string;
-		description: string;
 		items: ProjectItem[];
 	};
 	writing: {
+		featuredPostId: string;
 		metaTitle: string;
 		metaDescription: string;
 		title: string;
-		description: string;
-		hint: string;
 		emptyMessage: string;
 	};
 	footer: {

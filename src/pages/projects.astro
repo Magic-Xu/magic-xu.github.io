@@ -2,20 +2,29 @@
 import { getLocaleContent } from "../content";
 import ProjectCard from "../components/ProjectCard.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import Arrow from "../components/Arrow.astro";
 
 const content = getLocaleContent();
 const { projects } = content;
+const featured = projects.items.find((project) => project.name === projects.featuredName);
+if (!featured) throw new Error(`Featured project not found: ${projects.featuredName}`);
+const remaining = projects.items.filter((project) => project !== featured);
+const featuredLinks = featured.links ?? (featured.linkHref && featured.linkLabel ? [{ label: featured.linkLabel, href: featured.linkHref }] : []);
 ---
 
 <BaseLayout metaTitle={projects.metaTitle} metaDescription={projects.metaDescription}>
 	<section class="section projects-section">
 		<div class="container">
-			<header class="page-heading" data-reveal-group>
-				<h1 class="page-title">{projects.title}</h1>
-				<p class="page-desc">{projects.description}</p>
-			</header>
+			<h1 class="visually-hidden">{projects.title}</h1>
+			<article class="featured-project" id={featured.name.toLowerCase().replaceAll(" ", "-")}>
+				<div class="feature-meta"><p>01{featured.category && <><span class="meta-divider">/</span>{featured.category}</>}</p><p>{featured.status}</p></div>
+				<div class="feature-spread">
+					<div class="feature-heading"><h2>{featured.name}</h2>{featured.tagline && <p>{featured.tagline}</p>}</div>
+					<div class="feature-copy"><p>{featured.description}</p><div class="project-links">{featuredLinks.map((link) => <a class="text-link" href={link.href} target="_blank" rel="noreferrer">{link.label} <Arrow direction="up-right" /></a>)}</div></div>
+				</div>
+			</article>
 			<div class="project-index">
-				{projects.items.map((project, index) => <ProjectCard {...project} index={index + 1} featured={index === 0} />)}
+				{remaining.map((project, index) => <ProjectCard {...project} index={index + 2} />)}
 			</div>
 		</div>
 	</section>
