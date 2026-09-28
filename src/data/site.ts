@@ -9,16 +9,15 @@ export interface SiteConfig {
 }
 
 export const siteConfig: SiteConfig = {
-	title: "MagicXu",
-	description: "Android 工程师 / AI 探索者 / 独立开发者",
-	slogan: "Having witnessed the industry's tides, I still weave code into my life.",
+	title: "小麦在野",
+	description: "我是小麦，也叫 MagicXu。这里记录 AI、独立开发，以及更自由的工作与生活。",
+	slogan: "做自己的产品，记录真实的探索。",
 	url: "https://magic-xu.github.io",
 	author: "MagicXu",
 	github: "https://github.com/Magic-Xu",
 	email: "magicalxu666@gmail.com"
 };
 
-// 预留：未来可扩展为多语言站点配置（例如 zh / en）
 export const siteConfigs = {
 	zh: siteConfig
 } as const;

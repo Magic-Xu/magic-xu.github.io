@@ -3,6 +3,7 @@ import { getLocaleContent } from "../content";
 import { siteConfig } from "../data/site";
 
 const pathname = Astro.url.pathname;
+const { home = false } = Astro.props;
 const content = getLocaleContent();
 const links = content.navigation;
 
@@ -14,9 +15,9 @@ const isActive = (href: string) => {
 };
 ---
 
-<header class="site-header" transition:persist>
+<header class:list={["site-header", home && "site-header-hero"]}>
 	<div class="container header-inner">
-		<a class="site-brand" href="/" data-astro-prefetch="load">{siteConfig.title}</a>
+		{!home && <a class="site-brand" href="/" data-astro-prefetch="load"><span>{siteConfig.title}</span><span class="brand-alias" lang="en">MagicXu</span></a>}
 		<nav class="site-nav" aria-label="主导航">
 			{links.map((item) => (
 				<a
@@ -28,9 +29,7 @@ const isActive = (href: string) => {
 					{item.label}
 				</a>
 			))}
-			<a class="nav-link nav-external" href={siteConfig.github} target="_blank" rel="noreferrer">
-				GitHub <span aria-hidden="true">↗</span>
-			</a>
+
 		</nav>
 	</div>
 </header>

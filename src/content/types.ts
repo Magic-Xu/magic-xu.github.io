@@ -16,6 +16,7 @@ export interface ProjectItem {
 	description: string;
 	stack: string[];
 	tagline?: string;
+	category?: string;
 	theme?: "dark" | "light";
 	linkHref?: string;
 	linkLabel?: string;
@@ -23,6 +24,15 @@ export interface ProjectItem {
 		label: string;
 		href: string;
 	}[];
+}
+
+export interface SmallWorkItem {
+	id: "yinyue" | "fanren" | "daily-skills" | "obsidian";
+	name: string;
+	category: string;
+	description: string;
+	linkLabel: string;
+	linkHref: string;
 }
 
 export interface LocaleContent {
@@ -56,18 +66,18 @@ export interface LocaleContent {
 		focuses: string[];
 	};
 	projects: {
+		featuredName: string;
 		metaTitle: string;
 		metaDescription: string;
 		title: string;
-		description: string;
 		items: ProjectItem[];
+		smallWorks: SmallWorkItem[];
 	};
 	writing: {
+		featuredPostId: string;
 		metaTitle: string;
 		metaDescription: string;
 		title: string;
-		description: string;
-		hint: string;
 		emptyMessage: string;
 	};
 	footer: {

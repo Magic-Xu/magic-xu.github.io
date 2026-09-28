@@ -1,0 +1,5 @@
+---
+interface Props { direction?: "right" | "up-right" | "left"; }
+const { direction = "right" } = Astro.props;
+---
+<span class="arrow-icon" style={`--icon: url('/icons/arrow-${direction}.svg')`} aria-hidden="true"></span>

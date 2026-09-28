@@ -3,29 +3,37 @@ import ArticleCard from "../../components/ArticleCard.astro";
 import { getLocaleContent } from "../../content";
 import { formatPubDate, getPublishedPosts } from "../../lib/blog";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import Arrow from "../../components/Arrow.astro";
 
 const content = getLocaleContent();
 const { writing } = content;
 const posts = await getPublishedPosts();
+const featured = posts.find((post) => post.id === writing.featuredPostId);
+if (posts.length && !featured) throw new Error(`Featured published article not found: ${writing.featuredPostId}`);
+const remaining = posts.filter((post) => post !== featured);
+const displayTitle = (title: string) => title.replace(/^独立 App 开发系列：/, "");
 ---
 
 <BaseLayout metaTitle={writing.metaTitle} metaDescription={writing.metaDescription}>
 	<section class="section writing-section">
 		<div class="container">
-			<header class="page-heading writing-heading" data-reveal-group>
-				<h1 class="page-title">{writing.title}</h1>
-				<p class="page-desc">{writing.description}</p>
-				{writing.hint && <p class="page-hint">{writing.hint}</p>}
-			</header>
+			<h1 class="visually-hidden">{writing.title}</h1>
+			{featured && <article class="featured-writing">
+				<div class="feature-meta"><p>置顶<span class="meta-divider">/</span><time datetime={featured.data.pubDate.toISOString()}>{formatPubDate(featured.data.pubDate)}</time></p>{featured.data.readingTime && <p>阅读约 {featured.data.readingTime} 分钟</p>}</div>
+				<div class="feature-spread">
+					<h2><a href={`/writing/${featured.id}/`}>{displayTitle(featured.data.title)}</a></h2>
+					<div class="feature-copy"><p>{featured.data.description}</p><a class="text-link featured-writing-link" href={`/writing/${featured.id}/`}>阅读全文 <Arrow direction="up-right" /></a></div>
+				</div>
+			</article>}
 
 			{posts.length === 0 ? (
 				<p class="empty-state">{writing.emptyMessage}</p>
 			) : (
 				<div class="writing-index">
-					{posts.map((post, index) => (
+					{remaining.map((post, index) => (
 						<ArticleCard
-							index={index + 1}
-							title={post.data.title}
+							index={index + 2}
+							title={displayTitle(post.data.title)}
 							summary={post.data.description}
 							date={formatPubDate(post.data.pubDate)}
 							tags={post.data.tags}

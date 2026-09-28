@@ -1,4 +1,5 @@
 ---
+import Arrow from "../../components/Arrow.astro";
 import { render } from "astro:content";
 import type { CollectionEntry } from "astro:content";
 import { formatPubDate, getPublishedPosts } from "../../lib/blog";
@@ -20,7 +21,7 @@ const tocItems = headings
 	<section class="section article-section">
 		<div class="container article-layout">
 			<aside class="article-toc" aria-label="文章目录">
-				<a class="toc-back" href="/writing/"><span aria-hidden="true">←</span> 返回 Writing</a>
+				<a class="toc-back" href="/writing/"><Arrow direction="left" /> 返回文章</a>
 				<p class="toc-label">目录</p>
 				<nav>
 					{tocItems.map((item) => <a class={`toc-link toc-depth-${item.depth}`} href={`#${item.slug}`}>{item.text}</a>)}
@@ -29,7 +30,7 @@ const tocItems = headings
 
 			<article id="article-top" class="article-detail">
 				<header class="article-header" data-reveal-group>
-					<a class="text-link back-link" href="/writing/"><span aria-hidden="true">←</span> 返回 Writing</a>
+					<a class="text-link back-link" href="/writing/"><Arrow direction="left" /> 返回文章</a>
 					<h1 class="page-title">{post.data.title}</h1>
 					<p class="meta-line">
 						{formatPubDate(post.data.pubDate)}

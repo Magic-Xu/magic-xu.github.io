@@ -1,0 +1,116 @@
+---
+import { Image } from "astro:assets";
+import Arrow from "./Arrow.astro";
+import type { SmallWorkItem } from "../content/types";
+import silverPet from "../assets/projects/yinyue-spritesheet.webp";
+import yuanyao from "../assets/projects/yuanyao.png";
+import meining from "../assets/projects/meining.png";
+import obsidian from "../assets/projects/obsidian.png";
+
+interface Props { items: SmallWorkItem[] }
+const { items } = Astro.props;
+const visualWorks = items.filter((item) => item.id === "yinyue" || item.id === "fanren");
+const tools = items.filter((item) => item.id === "daily-skills" || item.id === "obsidian");
+---
+
+<section class="small-works" id="small-works" aria-labelledby="small-works-title">
+  <h2 id="small-works-title">工具与小玩意</h2>
+  <div class="visual-works">
+    {visualWorks.map((item) => <article id={item.id} class="small-work">
+      {item.id === "yinyue" ?
+        <button class="pet-preview" type="button" aria-label="让银月打个招呼" data-pet-preview>
+          <span class="pet-frame"><Image src={silverPet} width={1536} quality={80} format="webp" class="pet-sprite" alt="" loading="lazy" /></span>
+          <span class="pet-invitation">打个招呼</span>
+        </button> :
+        <a class="figure-preview" href={item.linkHref} target="_blank" rel="noreferrer" aria-label="打开凡人角色造型集">
+          <Image src={yuanyao} width={480} format="webp" alt="元瑶的黑袍银冠角色造型" loading="lazy" />
+          <Image src={meining} width={480} format="webp" alt="梅凝的青绿衣装角色造型" loading="lazy" />
+        </a>
+      }
+      <div class="work-caption">
+        <p class="work-category">{item.category}</p>
+        <h3>{item.name}</h3>
+        <p class="work-description">{item.description}</p>
+        <a class="text-link" href={item.linkHref} target="_blank" rel="noreferrer">{item.linkLabel} <Arrow direction="up-right" /></a>
+      </div>
+    </article>)}
+  </div>
+  <div class="useful-tools">
+    {tools.map((item) => <article id={item.id} class="tool-entry">
+      <div class="tool-copy">
+        <p class="work-category">{item.category}</p>
+        <h3>{item.name}</h3>
+        <p class="work-description">{item.description}</p>
+        <a class="text-link" href={item.linkHref} target="_blank" rel="noreferrer">{item.linkLabel} <Arrow direction="up-right" /></a>
+      </div>
+      {item.id === "obsidian" && <a class="workspace-preview" href={item.linkHref} target="_blank" rel="noreferrer" aria-label="查看 Magic Obsidian 工作台预设"><Image src={obsidian} width={640} format="webp" alt="Magic Obsidian 工作台预览，包含日历、笔记入口与关系图" loading="lazy" /></a>}
+    </article>)}
+  </div>
+</section>
+
+<script>
+  const bindPetPreview = () => {
+    document.querySelectorAll<HTMLButtonElement>("[data-pet-preview]").forEach((button) => {
+      if (button.dataset.bound) return;
+      button.dataset.bound = "true";
+      button.addEventListener("click", () => {
+        const sprite = button.querySelector<HTMLImageElement>(".pet-sprite");
+        if (!sprite) return;
+        sprite.getAnimations().forEach((animation) => animation.cancel());
+        // Codex v2: 192 × 208 cells, with four waving frames on the fourth row.
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          sprite.style.transform = "translate(0, -624px)";
+          return;
+        }
+        sprite.animate([
+          { transform: "translate(0, -624px)" },
+          { transform: "translate(-768px, -624px)" }
+        ], { duration: 900, iterations: 2, easing: "steps(4, end)" });
+      });
+    });
+  };
+  bindPetPreview();
+  document.addEventListener("astro:page-load", bindPetPreview);
+</script>
+
+<style>
+  .small-works { padding-top: 76px; scroll-margin-top: 118px; }
+  .small-works > h2 { margin-bottom: 34px; font: 500 34px/1.5 var(--font-serif); letter-spacing: 1px; }
+  .visual-works { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; }
+  .small-work { min-width: 0; }
+  .pet-preview, .figure-preview { width: 100%; height: 300px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .pet-preview { position: relative; border: 0; padding: 12px 0 38px; color: var(--color-accent); background: #dfe4d5; cursor: pointer; }
+  .pet-frame { display: block; width: 192px; height: 208px; overflow: hidden; }
+  .pet-sprite { display: block; width: 1536px; height: 2288px; max-width: none; }
+  .pet-invitation { position: absolute; bottom: 17px; font: 400 13px/1.5 var(--font-serif); border-bottom: 1px solid #a3af95; padding-bottom: 3px; }
+  .figure-preview { background: #d8dbe2; gap: 2px; }
+  .figure-preview img { display: block; width: calc(50% - 1px); height: 100%; object-fit: contain; }
+  .work-caption { padding-top: 22px; }
+  .work-category { color: var(--color-muted); font-size: 12px; }
+  h3 { margin-top: 5px; font: 500 27px/1.55 var(--font-serif); }
+  .work-description { margin-top: 8px; color: #526155; font-size: 15px; line-height: 1.9; }
+  .text-link { margin-top: 9px; }
+  .useful-tools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; margin-top: 37px; }
+  .tool-entry { display: flex; align-items: flex-start; gap: 24px; padding-top: 29px; border-top: 1px solid var(--color-line); }
+  .tool-copy { min-width: 0; flex: 1; }
+  .tool-entry h3 { font-size: 25px; }
+  .workspace-preview { flex: 0 0 148px; margin-top: 8px; }
+  .workspace-preview img { display: block; width: 100%; height: auto; }
+  @media (max-width: 1100px) {
+    .visual-works, .useful-tools { gap: 28px; }
+    .tool-entry { flex-direction: column; align-items: flex-start; gap: 15px; }
+    .workspace-preview { flex-basis: auto; width: 180px; }
+  }
+  @media (max-width: 760px) {
+    .small-works { padding-top: 48px; scroll-margin-top: 104px; }
+    .small-works > h2 { font-size: 28px; margin-bottom: 25px; }
+    .visual-works, .useful-tools { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+    .pet-preview, .figure-preview { height: 260px; }
+    h3 { font-size: 25px; }
+    .work-caption { padding-top: 18px; }
+    .useful-tools { margin-top: 32px; gap: 0; }
+    .tool-entry { padding-block: 25px; }
+    .workspace-preview { width: 100%; }
+    .tool-entry:last-child { padding-bottom: 0; }
+  }
+</style>
