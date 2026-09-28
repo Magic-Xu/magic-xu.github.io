@@ -21,7 +21,7 @@ npm run dev
 - `src/content/locales/zh-CN.ts`：导航、作品及文章列表文案。
 - `projects.featuredName` 指定重点项目；`writing.featuredPostId` 指定置顶文章的文件名（不含 `.md`）。置顶项单独展示，其余文章按时间倒序，首页与 RSS 仍按发布时间排序。
 - `src/data/site.ts`：网站地址、作者和公开联系方式。
-- `/rss.xml`：按发布时间生成的文章摘要订阅源。
+- `/subscribe/`：RSS 订阅说明与地址复制入口；`/rss.xml` 为按发布时间生成的文章摘要订阅源。
 
 ## 视觉资源
 
