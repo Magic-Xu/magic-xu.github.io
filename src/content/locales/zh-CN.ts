@@ -95,11 +95,11 @@ export const zhCN: LocaleContent = {
 			},
 			{
 				name: "Pulse",
-				tagline: "轻量 MVI 架构实践。",
-				status: "进行中",
+				tagline: "基于 Kotlin 的开源 MVI 框架。",
+				status: "已发布 / 持续迭代",
 				description:
-					"一个面向 Android 的轻量 MVI 架构实践，强调状态流可读、模块边界清晰和工程落地成本可控。",
-				stack: ["Kotlin", "Android", "MVI", "Jetpack"],
+					"通过 Kotlin 协程管理状态与事件，支持纯 Kotlin/JVM、Android 和 Jetpack Compose，已发布至 Maven Central。",
+				stack: ["Kotlin", "Android", "MVI", "Jetpack Compose"],
 				linkHref: "https://github.com/Magic-Xu/pulse",
 				linkLabel: "查看项目"
 			}

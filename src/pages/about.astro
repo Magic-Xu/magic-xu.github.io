@@ -5,11 +5,11 @@ import Arrow from "../components/Arrow.astro";
 import { getLocaleContent } from "../content";
 const companies = getLocaleContent().about.work.companies;
 ---
-<BaseLayout metaTitle="关于" metaDescription="认识小麦：十年研发，保持好奇。做自己的产品，探索更自由的工作与生活。">
+<BaseLayout metaTitle="关于" metaDescription="认识小麦：十年研发经验，参与过游戏社区、系统 App、教育、电商、云服务、影像与生成式 AI 产品的研发。">
   <section class="section"><div class="container personal-page">
     <header class="page-heading" data-reveal-group><p class="eyebrow" lang="en">ABOUT</p><h1 class="page-title">你好，我是小麦。</h1><p class="page-desc">也叫 MagicXu。独立开发者，AI 探索者。</p></header>
     <div class="personal-prose">
-      <section><h2>十年研发，保持好奇。</h2><p>从 Android 开发开始，一路接触复杂客户端、性能与稳定性，也参与过 AI 产品的开发。</p>
+      <section><h2 class="experience-title"><span>十年研发经验，</span><span>持续保持好奇心。</span></h2><p>参与过游戏社区、系统 App、教育、电商、云服务、影像与生成式 AI 产品的研发。</p>
         <ul class="company-wall" aria-label="工作经历公司">{companies.map((company) => <li class:list={["company-item", company.variant && `company-logo-${company.variant}`]}><div class="company-logo-frame"><img src={company.logo} alt="" loading="lazy" /></div><p>{company.name}</p></li>)}</ul>
         <p>现在，我也在做自己的产品。把一个想法变成能被使用的东西，再面对真实的反馈，这个过程让我一直保持兴趣。</p><a class="text-link" href="/projects/">我做的东西 <Arrow /></a></section>
       <section><h2>记录真实的探索。</h2><p>这里写 AI 实践、独立开发，以及从想法到上线的具体经历。做成了什么，哪里走了弯路，还有哪些问题没想明白，都值得认真记下来。</p><p>我希望能以自己喜欢的方式度过一生。让工作更自由，留出时间去旅行、去体验生活，也是我正在探索的方向。</p></section>
@@ -22,3 +22,7 @@ const companies = getLocaleContent().about.work.companies;
     </div>
   </div></section>
 </BaseLayout>
+
+<style>
+  .experience-title span { display: inline-block; }
+</style>
