@@ -16,7 +16,7 @@ const featuredLinks = featured.links ?? (featured.linkHref && featured.linkLabel
 <BaseLayout metaTitle={projects.metaTitle} metaDescription={projects.metaDescription}>
 	<section class="section projects-section">
 		<div class="container">
-			<h1 class="visually-hidden">{projects.title}</h1>
+			<header class="collection-heading" data-reveal-group><h1 class="page-title">把想法，做成作品。</h1><p>自己的产品，以及好奇心生长出的实验。</p></header>
 			<article class="featured-project" id={featured.name.toLowerCase().replaceAll(" ", "-")}>
 				<div class="feature-meta"><p>01{featured.category && <><span class="meta-divider">/</span>{featured.category}</>}</p><p>{featured.status}</p></div>
 				<div class="feature-spread">
