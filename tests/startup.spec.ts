@@ -164,3 +164,81 @@ test('no JavaScript keeps the landscape, text and navigation readable', async ({
     await expect(page).toHaveURL(/\/about\/$/);
   } finally { await context.close(); }
 });
+
+test('bottom entrances are gradual and revealing 3D controls never shifts the text or explore link', async ({ page }) => {
+  await instrumentScene(page);
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => release = resolve);
+  await page.route('**/alpine-height.png', async route => { await gate; await route.continue(); });
+  await page.addInitScript(() => {
+    (window as any).__entrances = [];
+    document.addEventListener('animationstart', event => {
+      if (event.animationName !== 'horizon-item-enter') return;
+      const element = event.target as HTMLElement;
+      requestAnimationFrame(() => requestAnimationFrame(() => (window as any).__entrances.push({ className: element.className, opacity: Number(getComputedStyle(element).opacity), transform: getComputedStyle(element).transform })));
+    });
+  });
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  try {
+    await expect(page.locator('.hero-scroll')).toHaveCSS('opacity', '1');
+    await expect(page.locator('[data-scene-journey]')).toBeHidden();
+    const positions = () => page.evaluate(() => ['#home-title', '.hero-horizon', '.hero-scroll'].map(selector => {
+      const box = document.querySelector(selector)!.getBoundingClientRect(); return { y: box.y, height: box.height };
+    }));
+    const before = await positions();
+    release(); await sceneReady(page);
+    await expect(page.locator('[data-scene-toggle]')).toHaveCSS('opacity', '1');
+    expect(await positions()).toEqual(before);
+    await page.setViewportSize({ width: 768, height: 1024 });
+    const creditGap = await page.evaluate(() => {
+      const range = document.createRange(); range.selectNodeContents(document.querySelector('.scene-credit')!);
+      return range.getBoundingClientRect().left - document.querySelector('[data-radio]')!.getBoundingClientRect().right;
+    });
+    expect(creditGap, 'Source text has breathing room beside the radio on tablet').toBeGreaterThanOrEqual(12);
+    const samples: { className: string; opacity: number; transform: string }[] = await page.evaluate(() => (window as any).__entrances);
+    for (const className of ['scene-credit', 'hero-scroll', 'scene-journey', 'scene-toggle']) {
+      const sample = samples.find(item => item.className === className);
+      expect(sample, `${className} has its own entrance`).toBeDefined();
+      expect(sample!.opacity).toBeLessThan(.9);
+      expect(sample!.transform).not.toBe('none');
+    }
+    expect(await page.evaluate(() => window.__probe.introStarts)).toBe(1);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    expect(await page.evaluate(() => window.__probe.introStarts)).toBe(1);
+  } finally { release(); }
+});
+
+test('explore remains usable without 3D, and the radio entrance is interruptible and never repeats on client navigation', async ({ page }) => {
+  await page.route('**/landscape/**', route => route.abort());
+  await page.addInitScript(() => {
+    (window as any).__radioFrames = [];
+    const sample = () => {
+      const radio = document.querySelector<HTMLElement>('[data-radio]:not([hidden])');
+      if (radio) (window as any).__radioFrames.push({ opacity: Number(getComputedStyle(radio).opacity), transform: getComputedStyle(radio).transform });
+      if (performance.now() < 2500) requestAnimationFrame(sample);
+    };
+    requestAnimationFrame(sample);
+  });
+  await page.goto('/');
+  await expect(page.locator('[data-radio]')).toHaveAttribute('data-entered', 'true');
+  const frames: { opacity: number; transform: string }[] = await page.evaluate(() => (window as any).__radioFrames);
+  expect(frames.some(frame => frame.opacity > .05 && frame.opacity < .9 && frame.transform !== 'none')).toBe(true);
+  await page.locator('.hero-scroll').click();
+  await expect(page).toHaveURL(/#recent-title$/);
+  await expect(page.locator('#recent-title')).toBeInViewport();
+  await page.locator('[data-open]').click();
+  await page.keyboard.press('Escape');
+  await page.locator('.site-nav a[href="/about/"]').click();
+  await expect(page.locator('[data-radio]')).toHaveAttribute('data-entered', 'true');
+  await expect(page.locator('[data-radio]')).toHaveCSS('opacity', '1');
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  // An immediate click finishes the decoration while keeping the requested action.
+  await page.locator('[data-open]').dispatchEvent('click');
+  await expect(page.locator('[data-panel]')).toBeVisible();
+  await expect(page.locator('[data-radio]')).toHaveCSS('opacity', '1');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.reload();
+  await expect(page.locator('[data-radio]')).toHaveCSS('opacity', '1');
+  await expect(page.locator('[data-radio]')).toHaveCSS('transform', 'none');
+});

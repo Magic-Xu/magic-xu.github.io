@@ -245,7 +245,7 @@ export function createLandscape(host: HTMLElement) {
   pauseButton.addEventListener('click', () => { paused = !paused; updatePause(); paused ? stop() : start(); }, { signal });
   journeyButton.addEventListener('click', () => setJourney(!exploring), { signal });
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && exploring) { setJourney(false); journeyButton.focus({ preventScroll: true }); }
+    if (event.key === 'Escape' && !event.defaultPrevented && exploring) { setJourney(false); journeyButton.focus({ preventScroll: true }); }
   }, { signal });
   reduced.addEventListener('change', () => {
     if (reduced.matches) { fallback(); journey = 0; }
@@ -269,7 +269,7 @@ export function createLandscape(host: HTMLElement) {
     const buffers = await prepareTerrain(data, heightImage, small, signal);
     if (!alive) return;
     // Let the compositor finish the opening text before GPU uploads/compilation.
-    await Promise.allSettled(Array.from(hero.querySelectorAll('.hero-copy > *, .hero-horizon')).flatMap(element => element.getAnimations().map(animation => animation.finished)));
+    await Promise.allSettled(Array.from(hero.querySelectorAll('.hero-copy > *, .hero-horizon, .scene-credit, .hero-scroll')).flatMap(element => element.getAnimations().map(animation => animation.finished)));
     if (!alive) return;
     const terrain = createTerrain(data, buffers);
     terrainHeight = terrain.heightAt;

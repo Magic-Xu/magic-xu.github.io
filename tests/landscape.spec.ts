@@ -65,6 +65,23 @@ test('context loss and a live motion preference switch leave a usable static pag
   await expect(page.locator('[data-scene-journey]')).toBeVisible();
 });
 
+test('Escape dismisses the radio channel picker and panel before leaving the landscape journey', async ({ page }) => {
+  await page.goto('/'); await sceneReady(page);
+  const journey = page.locator('[data-scene-journey]');
+  await journey.click();
+  await page.locator('[data-open]').click();
+  await page.locator('[data-channel-toggle]').click();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('[data-channel-region]')).toBeHidden();
+  await expect(page.locator('[data-panel]')).toBeVisible();
+  await expect(journey).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('[data-panel]')).toBeHidden();
+  await expect(journey).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Escape');
+  await expect(journey).toHaveAttribute('aria-pressed', 'false');
+});
+
 test('pending loads tolerate preference changes and navigation without duplicate renderers', async ({ page }) => {
   await instrumentScene(page);
   let release!: () => void;

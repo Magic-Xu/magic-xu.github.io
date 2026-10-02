@@ -13,8 +13,12 @@ const initMotion = () => {
   const detailsTweens = new Map<HTMLDetailsElement, gsap.core.Tween>();
   let progressFrame = 0;
   let headingObserver: IntersectionObserver | undefined;
-  document.querySelectorAll<HTMLElement>('.hero-copy > *, .hero-horizon, [data-reveal-group] > *').forEach(element => {
-    const entrance = element.getAnimations().find(animation => animation instanceof CSSAnimation && /^(copy|horizon)-enter$/.test(animation.animationName));
+  const isEntrance = (name: string) => /^(copy|horizon|horizon-item)-enter$/.test(name);
+  page.addEventListener('animationend', event => {
+    if (event instanceof AnimationEvent && isEntrance(event.animationName) && event.target instanceof HTMLElement) event.target.dataset.entered = 'true';
+  }, { signal });
+  document.querySelectorAll<HTMLElement>('.hero-copy > *, .hero-horizon, .scene-credit, .hero-scroll, [data-reveal-group] > *').forEach(element => {
+    const entrance = element.getAnimations().find(animation => animation instanceof CSSAnimation && isEntrance(animation.animationName));
     if (!entrance || entrance.playState === 'finished') element.dataset.entered = 'true';
     else entrance.finished.then(() => { element.dataset.entered = 'true'; }).catch(() => {});
   });
