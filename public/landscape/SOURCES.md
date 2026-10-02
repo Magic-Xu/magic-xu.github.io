@@ -10,7 +10,7 @@
 - 来源：https://www.swisstopo.admin.ch/en/orthoimage-swissimage-10
 - 使用条款：https://www.swisstopo.admin.ch/en/faq-free-geodata
 - 获取：2026-10-02，geo.admin.ch WMTS 的 current 版本，EPSG:3857。世界底图中心区域为 zoom 14、X 8544–8559、Y 5784–5799，外围补充 zoom 13、X 4270–4281、Y 2890–2901；局部高清影像为 zoom 15、X 17100–17111、Y 11575–11590。
-- 处理：瓦片拼接、不同分辨率缩放与 WebP 编码。`alpine-color*.webp` 为远景底图，`alpine-detail*.webp` 为飞行区域的局部高清图。`alpine-poster*.webp` 是本场景渲染的静态画面。
+- 处理：瓦片拼接、不同分辨率缩放与 WebP 编码。`alpine-color*.webp` 为远景底图，`alpine-detail*.webp` 为飞行区域的局部高清图，`alpine-opening*.webp` 为同一高清图保留分辨率、进一步压缩后的开场纹理。`alpine-poster*.webp` 是本场景确定起点渲染的静态画面，`alpine-preview*.webp` 是嵌入首页 HTML 的微型版本。
 
 ## 高程
 

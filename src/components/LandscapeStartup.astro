@@ -1,0 +1,36 @@
+---
+import { LANDSCAPE_SESSION_KEY } from '../lib/landscape-state';
+---
+<script is:inline data-astro-rerun define:vars={{ key: LANDSCAPE_SESSION_KEY }}>
+  (() => {
+    const hero = document.querySelector('.home-hero');
+    const poster = hero.querySelector('.hero-landscape img');
+    const showPoster = () => poster.decode().then(() => poster.setAttribute('data-decoded', '')).catch(() => {});
+    poster.addEventListener('load', showPoster);
+    if (poster.complete) showPoster();
+    // This runs while HTML is parsed, before a reload can paint the opening poster.
+    try {
+      const raw = sessionStorage.getItem(key);
+      if (performance.getEntriesByType('navigation')[0]?.type !== 'reload') { sessionStorage.removeItem(key); return; }
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches || navigator.connection?.saveData) return;
+      const saved = JSON.parse(raw || 'null');
+      const state = saved?.state;
+      if (!state || Date.now() - saved.savedAt > 900000 || saved.savedAt > Date.now() ||
+          saved.mobile !== matchMedia('(max-width: 760px)').matches ||
+          !Number.isFinite(saved.savedAt) || Math.abs(saved.aspect / (hero.clientWidth / hero.clientHeight) - 1) > .02 ||
+          !Number.isFinite(saved.aspect) || typeof saved.image !== 'string' || saved.image.length > 500000 ||
+          !/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(saved.image)) return;
+      const ranges = { distance: [0, 1e9], elapsed: [0, 1e9], journey: [0, 1], lookX: [-1.5, 1.5], lookY: [-1, 1], detail: [0, 1], rock: [0, 1] };
+      if (Object.entries(ranges).some(([name, [min, max]]) => !Number.isFinite(state[name]) || state[name] < min || state[name] > max) ||
+          typeof state.paused !== 'boolean' || typeof state.exploring !== 'boolean') return;
+      const image = hero.querySelector('.landscape-resume');
+      image.src = saved.image;
+      image.hidden = false;
+      hero.setAttribute('data-restored', '');
+      hero.dataset.exploring = String(state.exploring);
+      hero.querySelector('.hero-copy').inert = state.exploring;
+      window.__landscapeResume = saved;
+    } catch { /* Storage can be unavailable; the normal opening is always usable. */ }
+  })();
+</script>
+<noscript><style>.hero-landscape img { opacity: 1; }</style></noscript>

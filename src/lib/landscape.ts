@@ -1,47 +1,34 @@
 import * as THREE from 'three';
 import { createAtmosphere } from './landscape-atmosphere';
+import { elevationAt, type TerrainData, type TerrainBuffers } from './landscape-terrain';
+import { LANDSCAPE_SESSION_KEY, type LandscapeState } from './landscape-state';
+import { createFlightRoute, worldPoint } from './landscape-route';
+import { createTextureLoader, type TexturePixels } from './landscape-textures';
 
-type TerrainData = { samples: number; size: number; tileZoom: number; tileX: number; tileY: number; tiles: number; detail: { offset: [number, number]; scale: [number, number] } };
-
-function loadImage(url: string, signal: AbortSignal) {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
-    const image = new Image();
-    const clean = () => { image.onload = null; image.onerror = null; signal.removeEventListener('abort', abort); };
-    const abort = () => { clean(); image.src = ''; reject(new DOMException('Aborted', 'AbortError')); };
-    if (signal.aborted) { abort(); return; }
+function prepareTerrain(data: TerrainData, height: Blob, small: boolean, signal: AbortSignal) {
+  return new Promise<TerrainBuffers>((resolve, reject) => {
+    const worker = new Worker(new URL('./landscape-terrain.worker.ts', import.meta.url), { type: 'module' });
+    const clean = () => { worker.terminate(); signal.removeEventListener('abort', abort); };
+    const abort = () => { clean(); reject(new DOMException('Aborted', 'AbortError')); };
     signal.addEventListener('abort', abort, { once: true });
-    image.onload = () => { clean(); resolve(image); };
-    image.onerror = () => { clean(); reject(new Error(`Could not load landscape asset: ${url}`)); };
-    image.src = url;
+    if (signal.aborted) { abort(); return; }
+    worker.onmessage = ({ data: result }: MessageEvent<TerrainBuffers & { error?: string }>) => {
+      clean(); result.error ? reject(new Error(result.error)) : resolve(result);
+    };
+    worker.onerror = event => { event.preventDefault(); clean(); reject(new Error('Terrain worker unavailable')); };
+    worker.postMessage({ data, height, divisions: small ? 384 : 768 });
   });
 }
 
-function createTerrain(data: TerrainData, heights: Uint16Array, small: boolean) {
+function createTerrain(data: TerrainData, buffers: TerrainBuffers) {
   const { samples, size } = data;
-  function elevation(u: number, v: number) {
-    const x = THREE.MathUtils.clamp(u * (samples - 1), 0, samples - 1);
-    const y = THREE.MathUtils.clamp(v * (samples - 1), 0, samples - 1);
-    const x0 = Math.floor(x), y0 = Math.floor(y), x1 = Math.min(x0 + 1, samples - 1), y1 = Math.min(y0 + 1, samples - 1);
-    return THREE.MathUtils.lerp(THREE.MathUtils.lerp(heights[y0 * samples + x0], heights[y0 * samples + x1], x - x0),
-      THREE.MathUtils.lerp(heights[y1 * samples + x0], heights[y1 * samples + x1], x - x0), y - y0);
-  }
-  const divisions = small ? 384 : 768;
-  const geometry = new THREE.PlaneGeometry(size, size, divisions, divisions);
-  const positions = geometry.attributes.position;
-  for (let row = 0; row <= divisions; row++) {
-    for (let col = 0; col <= divisions; col++) {
-      positions.setXYZ(row * (divisions + 1) + col, (col / divisions - .5) * size,
-        elevation(col / divisions, row / divisions), (row / divisions - .5) * size);
-    }
-  }
-  geometry.computeVertexNormals(); geometry.computeBoundingSphere();
-  function world(lat: number, lon: number, altitude: number) {
-    const scale = 2 ** data.tileZoom;
-    const u = ((lon + 180) / 360 * scale - data.tileX) / data.tiles;
-    const v = ((1 - Math.asinh(Math.tan(THREE.MathUtils.degToRad(lat))) / Math.PI) / 2 * scale - data.tileY) / data.tiles;
-    return new THREE.Vector3((u - .5) * size, altitude, (v - .5) * size);
-  }
-  return { geometry, world, heightAt: (x: number, z: number) => elevation(x / size + .5, z / size + .5) };
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(buffers.positions, 3));
+  geometry.setAttribute('normal', new THREE.BufferAttribute(buffers.normals, 3));
+  geometry.setAttribute('uv', new THREE.BufferAttribute(buffers.uv, 2));
+  geometry.setIndex(new THREE.BufferAttribute(buffers.indices, 1));
+  geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 2500, 0), Math.hypot(size / 2, size / 2, 2500));
+  return { geometry, heightAt: (x: number, z: number) => elevationAt(buffers.heights, samples, x / size + .5, z / size + .5) };
 }
 
 function createSky() {
@@ -77,9 +64,20 @@ export function createLandscape(host: HTMLElement) {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const small = matchMedia('(max-width: 760px)').matches;
   const controller = new AbortController(), { signal } = controller;
+  const loadTexture = createTextureLoader(signal);
+  const resume = window.__landscapeResume?.state;
+  delete window.__landscapeResume;
   let alive = true, ready = false, visible = true, paused = false, lost = false;
   let exploring = false, journey = 0, raf = 0, elapsed = 0, last = 0, distance = 0;
   let pointerX = 0, pointerY = 0, smoothX = 0, smoothY = 0;
+  let presented = false, handover = false, speed = 0;
+  let presentation = 0;
+  let blendDetail = (_dt: number) => {};
+  let readDetail = () => ({ detail: 0, rock: 0 });
+  if (resume) {
+    ({ paused, exploring, journey, elapsed, distance } = resume);
+    pointerX = smoothX = resume.lookX; pointerY = smoothY = resume.lookY;
+  }
   let drag: { id: number; x: number; y: number; lookX: number; lookY: number; moved: boolean } | undefined;
   let width = hero.clientWidth, height = hero.clientHeight, frameCount = 0, slowFrames = 0;
   const resources: { dispose(): void }[] = [];
@@ -87,7 +85,7 @@ export function createLandscape(host: HTMLElement) {
   canvas.setAttribute('aria-hidden', 'true');
   let renderer: THREE.WebGLRenderer;
   try { renderer = new THREE.WebGLRenderer({ canvas, antialias: !small, powerPreference: 'high-performance' }); }
-  catch { hero.dataset.scene = 'fallback'; return () => { controller.abort(); }; }
+  catch { hero.dataset.scene = 'fallback'; hero.dataset.exploring = 'false'; copy.inert = false; return () => { controller.abort(); }; }
   renderer.setPixelRatio(Math.min(devicePixelRatio, small ? 1.35 : 1.65));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.NoToneMapping;
@@ -106,14 +104,14 @@ export function createLandscape(host: HTMLElement) {
   scene.add(sky); resources.push(skyGeometry, skyMaterial);
   host.append(canvas);
 
-  function render(dt: number) {
-    elapsed += dt;
+  function render(dt: number, flightDt = dt) {
+    elapsed += flightDt;
     journey += ((exploring ? 1 : 0) - journey) * (1 - Math.exp(-dt * .65));
     smoothX += (pointerX - smoothX) * (1 - Math.exp(-dt * 12));
     smoothY += (pointerY - smoothY) * (1 - Math.exp(-dt * 12));
     // A closed, kilometre-scale route through surveyed terrain. Position and
     // look-ahead are arc-length sampled, so the aircraft never jumps at a loop.
-    distance += dt * (72 + journey * 70);
+    distance += flightDt * (72 + journey * 70);
     const progress = (distance / routeLength) % 1;
     route.getPointAt(progress, position);
     route.getPointAt((progress + 700 / routeLength) % 1, ahead);
@@ -133,13 +131,15 @@ export function createLandscape(host: HTMLElement) {
     if (!alive || !ready || !visible || paused || lost || reduced.matches || document.hidden) return;
     const delta = last ? (now - last) / 1000 : 0;
     if (!small || !last || delta >= .03) {
-      last = now; render(Math.min(delta, .07)); frameCount++;
+      const dt = Math.min(delta, .07);
+      speed = Math.min(1, speed + dt / 1.2);
+      blendDetail(dt); last = now; render(dt, dt * speed); frameCount++;
       if (delta > (small ? .052 : .033)) slowFrames++;
       if (frameCount === 100 && slowFrames > 55) { renderer.setPixelRatio(1); renderer.setSize(width, height); atmosphere?.resize(width, height); }
     }
     raf = requestAnimationFrame(tick);
   }
-  function start() { last = 0; if (alive && ready && visible && !paused && !lost && !reduced.matches && !document.hidden && !raf) raf = requestAnimationFrame(tick); }
+  function start() { last = 0; if (alive && ready && presented && visible && !paused && !lost && !reduced.matches && !document.hidden && !raf) raf = requestAnimationFrame(tick); }
   function finishDrag() {
     if (!drag) return;
     const id = drag.id;
@@ -153,7 +153,10 @@ export function createLandscape(host: HTMLElement) {
   function resize() {
     width = hero.clientWidth; height = hero.clientHeight;
     renderer.setSize(width, height); camera.aspect = width / height;
-    camera.fov = width < 761 ? 62 : 53;
+    const baseAspect = width < 761 ? 390 / 844 : 1920 / 1080;
+    const baseFov = width < 761 ? 62 : 53;
+    // Match object-fit: cover on the opening poster for every viewport aspect.
+    camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(baseFov) / 2) * Math.min(1, baseAspect / camera.aspect)));
     camera.updateProjectionMatrix(); atmosphere?.resize(width, height);
     if (ready && !lost) render(0);
   }
@@ -162,13 +165,53 @@ export function createLandscape(host: HTMLElement) {
     pauseButton.setAttribute('aria-label', paused ? '继续山野运镜' : '暂停山野运镜');
     pauseButton.querySelector('span')!.textContent = paused ? '继续漫游' : '暂停漫游';
   }
+  function updateJourney() {
+    hero.dataset.exploring = String(exploring); copy.inert = exploring;
+    journeyButton.setAttribute('aria-pressed', String(exploring));
+    journeyButton.querySelector('span')!.textContent = exploring ? '回到首页' : '走入山野';
+  }
   function setJourney(value: boolean) {
     finishDrag();
-    exploring = value; hero.dataset.exploring = String(value); copy.inert = value;
-    journeyButton.setAttribute('aria-pressed', String(value));
-    journeyButton.querySelector('span')!.textContent = value ? '回到首页' : '走入山野';
+    exploring = value; updateJourney();
     paused = false; updatePause(); start();
   }
+  function fallback() {
+    stop(); presented = false; handover = false; presentation++;
+    delete hero.dataset.scenePresented;
+    exploring = false; updateJourney();
+    hero.dataset.scene = 'fallback';
+    pauseButton.hidden = journeyButton.hidden = true;
+  }
+  async function present() {
+    if (!alive || !ready || reduced.matches || lost || handover || presented) return;
+    const attempt = ++presentation;
+    handover = true;
+    render(0);
+    // Paint the stationary frame before starting the compositor crossfade.
+    await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    if (!alive || reduced.matches || lost || attempt !== presentation) return;
+    hero.dataset.scene = 'ready';
+    const transitions = host.getAnimations();
+    await Promise.allSettled(transitions.map(animation => animation.finished));
+    if (!alive || reduced.matches || lost || attempt !== presentation || hero.dataset.scene !== 'ready') return;
+    presented = true; handover = false;
+    hero.dataset.scenePresented = 'true';
+    pauseButton.hidden = journeyButton.hidden = false;
+    updateJourney(); updatePause(); start();
+  }
+  function saveFrame() {
+    if (!alive || !ready || !presented || lost || reduced.matches) return;
+    finishDrag(); render(0);
+    const image = document.createElement('canvas');
+    image.width = Math.min(960, canvas.width); image.height = Math.round(image.width * height / width);
+    const context = image.getContext('2d');
+    if (!context) return;
+    context.drawImage(canvas, 0, 0, image.width, image.height);
+    const state: LandscapeState = { distance, elapsed, journey, lookX: smoothX, lookY: smoothY, paused, exploring, ...readDetail() };
+    try { sessionStorage.setItem(LANDSCAPE_SESSION_KEY, JSON.stringify({ state, image: image.toDataURL('image/jpeg', .82), aspect: width / height, mobile: small, savedAt: Date.now() })); }
+    catch { /* A denied/full store must not prevent navigation or the next opening. */ }
+  }
+  window.addEventListener('pagehide', saveFrame, { signal });
   const observer = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting;
     if (!visible && exploring) { setJourney(false); journey = 0; }
@@ -177,7 +220,7 @@ export function createLandscape(host: HTMLElement) {
   observer.observe(hero);
   const resizeObserver = new ResizeObserver(resize); resizeObserver.observe(hero);
   hero.addEventListener('pointerdown', event => {
-    if (!ready || lost || reduced.matches || drag || event.pointerType === 'touch' || !event.isPrimary || event.button !== 0) return;
+    if (!presented || lost || reduced.matches || drag || event.pointerType === 'touch' || !event.isPrimary || event.button !== 0) return;
     if (event.target instanceof Element && event.target.closest('a, button, input, textarea, select, summary, [contenteditable]')) return;
     event.preventDefault();
     drag = { id: event.pointerId, x: event.clientX, y: event.clientY, lookX: smoothX, lookY: smoothY, moved: false };
@@ -205,51 +248,79 @@ export function createLandscape(host: HTMLElement) {
     if (event.key === 'Escape' && exploring) { setJourney(false); journeyButton.focus({ preventScroll: true }); }
   }, { signal });
   reduced.addEventListener('change', () => {
-    stop(); setJourney(false); journey = 0;
-    const available = ready && !lost && !reduced.matches;
-    pauseButton.hidden = journeyButton.hidden = !available;
-    hero.dataset.scene = available ? 'ready' : 'fallback';
-    if (available) { render(0); start(); }
+    if (reduced.matches) { fallback(); journey = 0; }
+    else void present();
   }, { signal });
   canvas.addEventListener('webglcontextlost', event => {
-    event.preventDefault(); lost = true; stop(); setJourney(false); journey = 0;
-    hero.dataset.scene = 'fallback'; pauseButton.hidden = journeyButton.hidden = true;
+    event.preventDefault(); lost = true; fallback(); journey = 0;
   }, { signal });
   canvas.addEventListener('webglcontextrestored', () => {
     lost = false;
-    if (ready && !reduced.matches) { render(0); hero.dataset.scene = 'ready'; pauseButton.hidden = journeyButton.hidden = false; start(); }
+    void present();
   }, { signal });
 
   Promise.all([
     fetch('/landscape/alpine.json', { signal }).then(response => { if (!response.ok) throw new Error('Terrain metadata unavailable'); return response.json() as Promise<TerrainData>; }),
-    loadImage('/landscape/alpine-height.png', signal),
-    loadImage(small ? '/landscape/alpine-color-mobile.webp' : '/landscape/alpine-color.webp', signal)
-  ]).then(([data, heightImage, photo]) => {
+    fetch('/landscape/alpine-height.png', { signal }).then(response => { if (!response.ok) throw new Error('Terrain heights unavailable'); return response.blob(); }),
+    loadTexture(small ? '/landscape/alpine-color-mobile.webp' : '/landscape/alpine-color.webp'),
+    loadTexture(small ? '/landscape/alpine-opening-mobile.webp' : '/landscape/alpine-opening.webp', true).catch(() => undefined)
+  ]).then(async ([data, heightImage, photo, opening]) => {
     if (!alive) return;
-    if (heightImage.width !== data.samples || heightImage.height !== data.samples) throw new Error('Invalid terrain');
-    const heightCanvas = document.createElement('canvas');
-    heightCanvas.width = heightCanvas.height = data.samples;
-    const context = heightCanvas.getContext('2d', { willReadFrequently: true })!;
-    context.drawImage(heightImage, 0, 0);
-    const pixels = context.getImageData(0, 0, data.samples, data.samples).data;
-    const heights = new Uint16Array(data.samples * data.samples);
-    for (let i = 0; i < heights.length; i++) heights[i] = pixels[i * 4] * 256 + pixels[i * 4 + 1];
-    const terrain = createTerrain(data, heights, small);
+    const buffers = await prepareTerrain(data, heightImage, small, signal);
+    if (!alive) return;
+    // Let the compositor finish the opening text before GPU uploads/compilation.
+    await Promise.allSettled(Array.from(hero.querySelectorAll('.hero-copy > *, .hero-horizon')).flatMap(element => element.getAnimations().map(animation => animation.finished)));
+    if (!alive) return;
+    const terrain = createTerrain(data, buffers);
     terrainHeight = terrain.heightAt;
     if (!small) {
-      atmosphere = createAtmosphere(renderer, camera, terrain.world(46.577, 7.907, 1450));
+      atmosphere = createAtmosphere(renderer, camera, worldPoint(data, 46.577, 7.907, 1450));
       resources.push(atmosphere);
     }
-    const texture = new THREE.Texture(photo);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); texture.needsUpdate = true;
+    function makeTexture(image: TexturePixels) {
+      const texture = new THREE.DataTexture(image.pixels, image.width, image.height);
+      texture.generateMipmaps = true; texture.minFilter = THREE.LinearMipmapLinearFilter; texture.magFilter = THREE.LinearFilter;
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); texture.needsUpdate = true;
+      resources.push(texture);
+      return texture;
+    }
+    async function uploadTexture(texture: THREE.DataTexture) {
+      const { data, width, height } = texture.image;
+      if (!data) throw new Error('Texture pixels missing');
+      if (data.byteLength < 4 * 1024 * 1024) { renderer.initTexture(texture); return; }
+      // Reserve the full mip chain, then upload small strips between UI tasks.
+      // The texture joins the scene only after all strips and mipmaps are ready.
+      texture.source.dataReady = false; renderer.initTexture(texture); texture.source.dataReady = true;
+      texture.generateMipmaps = false;
+      for (let row = 0; row < height; row += 128) {
+        if (!alive) throw new DOMException('Aborted', 'AbortError');
+        if (lost) { texture.generateMipmaps = true; texture.needsUpdate = true; return; }
+        const rows = Math.min(128, height - row);
+        const strip = new THREE.DataTexture(data.subarray(row * width * 4, (row + rows) * width * 4), width, rows);
+        texture.generateMipmaps = row + rows === height;
+        renderer.copyTextureToTexture(strip, texture, null, new THREE.Vector2(0, row));
+        strip.dispose();
+        await new Promise<void>(resolve => setTimeout(resolve, 0));
+      }
+    }
+    resources.push(terrain.geometry);
+    const texture = makeTexture(photo);
+    const openingTexture = opening ? makeTexture(opening) : texture;
     const material = new THREE.MeshBasicMaterial({ map: texture });
     const detailUniforms = {
       detailMap: { value: texture }, detailReady: { value: 0 },
+      openingMap: { value: openingTexture }, openingReady: { value: opening ? 1 : 0 },
       detailOffset: { value: new THREE.Vector2(...data.detail.offset) },
       detailScale: { value: new THREE.Vector2(...data.detail.scale) },
       rockMap: { value: texture }, rockReady: { value: 0 }, terrainSize: { value: data.size }
     };
+    let detailLoaded = false, rockLoaded = false;
+    blendDetail = dt => {
+      if (detailLoaded) detailUniforms.detailReady.value = Math.min(1, detailUniforms.detailReady.value + dt / 1.4);
+      if (rockLoaded) detailUniforms.rockReady.value = Math.min(1, detailUniforms.rockReady.value + dt / 1.4);
+    };
+    readDetail = () => ({ detail: detailUniforms.detailReady.value, rock: detailUniforms.rockReady.value });
     // Geographic colour is preserved; a finer atlas covers the flight corridor.
     // Triplanar rock detail adds world-space texture to steep walls.
     material.onBeforeCompile = shader => {
@@ -257,14 +328,16 @@ export function createLandscape(host: HTMLElement) {
       shader.vertexShader = 'varying vec3 terrainPosition; varying vec3 terrainNormal;\n' + shader.vertexShader;
       shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nterrainPosition = position; terrainNormal = normal;');
       shader.fragmentShader = `varying vec3 terrainPosition; varying vec3 terrainNormal;
-        uniform sampler2D detailMap, rockMap; uniform float detailReady, rockReady, terrainSize;
+        uniform sampler2D detailMap, openingMap, rockMap; uniform float detailReady, openingReady, rockReady, terrainSize;
         uniform vec2 detailOffset, detailScale;\n` + shader.fragmentShader;
       shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', `
         #include <map_fragment>
         vec2 atlasUv = (vec2(vMapUv.x, 1. - vMapUv.y) - detailOffset) / detailScale;
         vec2 edge = smoothstep(vec2(0.), vec2(.03), atlasUv) * (1. - smoothstep(vec2(.97), vec2(1.), atlasUv));
         vec3 detail = texture2D(detailMap, vec2(atlasUv.x, 1. - atlasUv.y)).rgb;
-        diffuseColor.rgb = mix(diffuseColor.rgb, detail, edge.x * edge.y * detailReady);
+        vec3 opening = texture2D(openingMap, vec2(atlasUv.x, 1. - atlasUv.y)).rgb;
+        vec3 initial = mix(diffuseColor.rgb, opening, openingReady);
+        diffuseColor.rgb = mix(diffuseColor.rgb, mix(initial, detail, detailReady), edge.x * edge.y);
         vec3 weights = pow(abs(normalize(terrainNormal)), vec3(4.)); weights /= dot(weights, vec3(1.));
         vec3 rock = texture2D(rockMap, terrainPosition.yz / 180.).rgb * weights.x
           + texture2D(rockMap, terrainPosition.xz / 180.).rgb * weights.y
@@ -283,32 +356,36 @@ export function createLandscape(host: HTMLElement) {
         gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(.70,.76,.75), valley * distanceHaze * .24);
       `);
     };
-    const loadDetail = (url: string, rock: boolean) => loadImage(url, signal).then(image => {
+    const loadDetail = (url: string, rock: boolean) => loadTexture(url, true).then(async image => {
       if (!alive) return;
-      const detail = new THREE.Texture(image); detail.colorSpace = THREE.SRGBColorSpace;
-      detail.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+      const detail = makeTexture(image);
       if (rock) detail.wrapS = detail.wrapT = THREE.RepeatWrapping;
-      detail.needsUpdate = true; resources.push(detail);
-      if (rock) { detailUniforms.rockMap.value = detail; detailUniforms.rockReady.value = 1; }
-      else { detailUniforms.detailMap.value = detail; detailUniforms.detailReady.value = 1; }
-      if (ready && !lost && !paused && visible && !reduced.matches) render(0);
+      await uploadTexture(detail);
+      if (!alive) return;
+      if (rock) { detailUniforms.rockMap.value = detail; rockLoaded = true; detailUniforms.rockReady.value = resume?.rock ?? 0; }
+      else { detailUniforms.detailMap.value = detail; detailLoaded = true; detailUniforms.detailReady.value = resume?.detail ?? 0; }
     }).catch(() => { /* The complete base atlas remains usable if detail is unavailable. */ });
-    void loadDetail(small ? '/landscape/alpine-detail-mobile.webp' : '/landscape/alpine-detail.webp', false);
-    void loadDetail('/landscape/rock-detail.webp', true);
-    scene.add(new THREE.Mesh(terrain.geometry, material)); resources.push(texture, terrain.geometry, material);
-    const waypoints = [
-      [46.610, 7.895, 2200], [46.585, 7.900, 2650],
-      [46.561, 7.905, 3250], [46.545, 7.925, 3850],
-      [46.557, 7.950, 3800], [46.588, 7.958, 3400],
-      [46.613, 7.930, 2750], [46.628, 7.900, 2400]
-    ];
-    route = new THREE.CatmullRomCurve3(waypoints.map(([lat, lon, altitude]) => terrain.world(lat, lon, altitude)), true, 'centripetal');
-    route.arcLengthDivisions = 2000; route.updateArcLengths(); routeLength = route.getLength();
-    ready = true; resize();
-    if (!reduced.matches && !lost) { hero.dataset.scene = 'ready'; pauseButton.hidden = journeyButton.hidden = false; start(); }
+    const loadDetails = () => Promise.all([
+      loadDetail(small ? '/landscape/alpine-detail-mobile.webp' : '/landscape/alpine-detail.webp', false),
+      loadDetail('/landscape/rock-detail.webp', true)
+    ]);
+    scene.add(new THREE.Mesh(terrain.geometry, material)); resources.push(material);
+    route = createFlightRoute(data); routeLength = route.getLength();
+    if (resume) await loadDetails();
+    if (!alive) return;
+    await uploadTexture(texture);
+    if (opening) await uploadTexture(openingTexture);
+    if (!alive) return;
+    if (!lost) {
+      if (atmosphere) await atmosphere.prepare(scene); else await renderer.compileAsync(scene, camera);
+    }
+    if (!alive) return;
+    resize(); ready = true;
+    await present();
+    if (alive && !resume) void loadDetails();
   }).catch(() => {
     if (!alive) return;
-    hero.dataset.scene = 'fallback'; pauseButton.hidden = journeyButton.hidden = true; stop();
+    fallback();
   });
 
   resize();

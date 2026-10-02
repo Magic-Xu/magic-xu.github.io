@@ -10,7 +10,12 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "test": "playwright test",
+    "test:startup": "playwright test tests/startup.spec.ts",
+    "test:ui": "playwright test --ui",
+    "landscape:posters": "node scripts/capture-landscape-posters.mjs",
+    "landscape:assets": "node scripts/prepare-landscape-opening.mjs"
   },
   "dependencies": {
     "astro": "^7.3.5",
@@ -18,7 +23,10 @@
     "three": "^0.186.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^22.20.5",
     "@types/three": "^0.186.0",
+    "sharp": "^0.35.5",
     "typescript": "^7.0.2"
   }
 }

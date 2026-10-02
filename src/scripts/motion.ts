@@ -3,22 +3,20 @@ import { gsap } from "gsap";
 declare global { interface Window { __magicMotionCleanup?: () => void; } }
 
 const initMotion = () => {
+  const page = document.querySelector('main');
+  if (!page || page.hasAttribute('data-motion-ready')) return;
+  page.setAttribute('data-motion-ready', '');
   window.__magicMotionCleanup?.();
-  const media = gsap.matchMedia();
   const controller = new AbortController();
   const { signal } = controller;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const detailsTweens = new Map<HTMLDetailsElement, gsap.core.Tween>();
   let progressFrame = 0;
   let headingObserver: IntersectionObserver | undefined;
-  media.add('(prefers-reduced-motion: no-preference)', () => {
-    const hero = document.querySelector('.hero-copy');
-    if (hero) {
-      gsap.from(hero.children, { y: 28, autoAlpha: 0, duration: 1.15, stagger: .12, ease: 'power3.out', clearProps: 'all' });
-      gsap.from('.hero-horizon', { opacity: 0, duration: 1, delay: .65, clearProps: 'opacity' });
-    } else {
-      gsap.from('[data-reveal-group] > *', { y: 14, autoAlpha: 0, duration: .72, stagger: .07, ease: 'power3.out', clearProps: 'all' });
-    }
+  document.querySelectorAll<HTMLElement>('.hero-copy > *, .hero-horizon, [data-reveal-group] > *').forEach(element => {
+    const entrance = element.getAnimations().find(animation => animation instanceof CSSAnimation && /^(copy|horizon)-enter$/.test(animation.animationName));
+    if (!entrance || entrance.playState === 'finished') element.dataset.entered = 'true';
+    else entrance.finished.then(() => { element.dataset.entered = 'true'; }).catch(() => {});
   });
 
   document.querySelectorAll<HTMLDetailsElement>('.project-entry').forEach(details => {
@@ -72,7 +70,7 @@ const initMotion = () => {
     headings.forEach(heading => headingObserver!.observe(heading));
   }
   window.__magicMotionCleanup = () => {
-    controller.abort(); media.revert(); headingObserver?.disconnect(); cancelAnimationFrame(progressFrame);
+    controller.abort(); headingObserver?.disconnect(); cancelAnimationFrame(progressFrame);
     detailsTweens.forEach(tween => tween.kill());
     gsap.killTweensOf('.project-expanded');
   };
