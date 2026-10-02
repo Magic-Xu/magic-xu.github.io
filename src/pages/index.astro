@@ -3,25 +3,32 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Arrow from "../components/Arrow.astro";
 import { getPublishedPosts } from "../lib/blog";
 import { siteConfig } from "../data/site";
-const posts = (await getPublishedPosts()).slice(0, 2);
+const posts = (await getPublishedPosts()).slice(0, 3);
 const shortTitle = (title: string) => title.replace(/^独立 App 开发系列：\s*/, "");
 ---
 <BaseLayout metaDescription={siteConfig.description} home>
-  <section class="home-hero" aria-labelledby="home-title">
+  <section class="home-hero" aria-labelledby="home-title" data-scene="fallback">
     <picture class="hero-landscape" aria-hidden="true">
-      <img src="/images/home/mountain-green-ridges.webp" width="1860" height="845" alt="" fetchpriority="high" decoding="async" />
+      <source media="(max-width: 760px)" srcset="/landscape/alpine-poster-mobile.webp" /><img src="/landscape/alpine-poster.webp" width="1920" height="1080" alt="" fetchpriority="high" decoding="async" />
     </picture>
+    <div class="landscape-world" data-landscape aria-hidden="true"></div>
+    <div class="hero-shade" aria-hidden="true"></div>
     <div class="container hero-inner">
-      <div class="hero-copy">
-        <h1 id="home-title">小麦在野</h1>
-        <p class="hero-intro">探索 AI、独立开发，<br class="desktop-break" />以及更自由的工作与生活。</p>
-        <a class="hero-link" href="/about/">从这里认识我 <Arrow direction="up-right" /></a>
+      <div class="hero-copy" id="home-intro">
+        <p class="hero-prelude">在技术与生活的旷野里</p>
+        <h1 id="home-title">小麦在野<span class="hero-title-period" aria-hidden="true">。</span></h1>
+        <div class="hero-bottom-copy"><p class="hero-intro">探索 AI、独立开发，<br />以及更自由的工作与生活。</p>
+          <a class="hero-link" href="/about/">从这里认识我 <Arrow direction="up-right" /></a></div>
       </div>
-      <p class="hero-note">更大的世界<br /><span>仍在前方。</span></p>
+      <div class="hero-horizon"><a class="scene-credit" href="/landscape/credits/" aria-label="查看山野场景来源与致谢">影像 © swisstopo</a><div class="hero-horizon-actions">
+        <button type="button" class="scene-journey" data-scene-journey aria-pressed="false" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><path d="m9 12 3-3 3 3m-3-3v7"/></svg><span>走入山野</span></button>
+        <button type="button" class="scene-toggle" data-scene-toggle aria-label="暂停山野运镜" aria-pressed="false" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path class="scene-pause" d="M7 5v10M13 5v10"/><path class="scene-play" d="m7 5 8 5-8 5Z"/></svg><span>暂停漫游</span></button>
+        <a class="hero-scroll" href="#recent-title" aria-label="向下浏览最近的文章"><span>向下探索</span><Arrow /></a>
+      </div></div>
     </div>
   </section>
   <section class="home-journal container" aria-labelledby="recent-title">
-    <p class="margin-label" lang="en">FIELD<br />NOTES</p>
+    <p class="margin-label">沿途记录<span aria-hidden="true"></span></p>
     <div class="recent-writing">
       <div class="section-heading"><h2 id="recent-title">最近写下</h2><a class="all-writing" href="/writing/">全部文章 <Arrow /></a></div>
       <ul class="recent-list">{posts.map((post) => (<li><a href={`/writing/${post.id}/`}><span>{shortTitle(post.data.title)}</span><Arrow /></a></li>))}</ul>
@@ -32,3 +39,7 @@ const shortTitle = (title: string) => title.replace(/^独立 App 开发系列：
     </aside>
   </section>
 </BaseLayout>
+
+<script>
+  import "../scripts/landscape";
+</script>

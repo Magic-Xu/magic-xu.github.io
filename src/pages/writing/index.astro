@@ -17,7 +17,7 @@ const displayTitle = (title: string) => title.replace(/^独立 App 开发系列�
 <BaseLayout metaTitle={writing.metaTitle} metaDescription={writing.metaDescription}>
 	<section class="section writing-section">
 		<div class="container">
-			<h1 class="visually-hidden">{writing.title}</h1>
+			<header class="collection-heading" data-reveal-group><h1 class="page-title">探索，留下痕迹。</h1><p>关于 AI、独立开发，以及亲手走过的路。</p></header>
 			{featured && <article class="featured-writing">
 				<div class="feature-meta"><p>置顶<span class="meta-divider">/</span><time datetime={featured.data.pubDate.toISOString()}>{formatPubDate(featured.data.pubDate)}</time></p>{featured.data.readingTime && <p>阅读约 {featured.data.readingTime} 分钟</p>}</div>
 				<div class="feature-spread">
