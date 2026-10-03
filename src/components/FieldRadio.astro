@@ -1,6 +1,6 @@
 ---
-import { radioChannels, radioCover } from "../data/radio";
-const firstChannel = radioChannels[0];
+import { radioChannels, radioCover, defaultRadioChannel } from "../data/radio";
+const firstChannel = defaultRadioChannel;
 const first = firstChannel.tracks[0];
 const time = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
 ---
@@ -9,7 +9,7 @@ const time = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.flo
   <audio data-audio preload="none"></audio>
   <div class="radio-launcher" data-launcher>
     <button class="radio-open" data-open type="button" aria-label="展开在野电台" aria-controls="radio-panel" aria-expanded="false">
-      <span class="radio-record" aria-hidden="true"><img data-disc-cover src={radioCover(first)} width="32" height="32" alt="" loading="lazy" /></span>
+      <span class="radio-record" aria-hidden="true"><img data-disc-cover src={radioCover(first)} width="36" height="36" alt="" loading="lazy" /></span>
       <span class="radio-launcher-copy"><span>在野电台</span><span data-mini-status>听一会儿</span></span>
     </button>
     <button class="radio-mini-play radio-icon-button" data-play type="button" aria-label="播放音乐">
@@ -23,14 +23,6 @@ const time = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.flo
       <h2 id="radio-heading"><span class="radio-signal" aria-hidden="true"><i></i><i></i><i></i></span>在野电台</h2>
       <button class="radio-icon-button radio-collapse" data-close type="button" aria-label="收起电台，保留播放"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></button>
     </header>
-    <button class="radio-channel-toggle" data-channel-toggle type="button" aria-label={`切换频道，当前${firstChannel.title}`} aria-expanded="false" aria-controls="radio-channels">
-      <span class="radio-channel-caption">频道</span><span data-channel-title>{firstChannel.title}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg>
-    </button>
-    <div class="radio-channel-region" data-channel-region hidden inert>
-      <div id="radio-channels" class="radio-channels" data-channels role="group" aria-label="选择音乐频道">
-        {radioChannels.map(channel => <button data-channel={channel.id} type="button" aria-pressed={channel.id === firstChannel.id ? "true" : "false"}><span>{channel.title}</span><small>{channel.kind} · {channel.tracks.length} 首</small></button>)}
-      </div>
-    </div>
     <div class="radio-now">
       <img class="radio-cover" data-cover src={radioCover(first)} width="80" height="80" alt={`${first.title}封面`} loading="lazy" />
       <div class="radio-track-copy"><p class="radio-mood" data-mood>{first.mood}</p><h3 data-title>{first.title}</h3><p class="radio-artist" data-artist>{first.artist}</p></div>
@@ -51,12 +43,29 @@ const time = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.flo
     <footer class="radio-tools">
       <div class="radio-volume"><button class="radio-icon-button" data-mute type="button" aria-label="静音" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m11 5-5 4H3v6h3l5 4Z" /><path class="radio-volume-waves" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14" /><path class="radio-mute-line" d="m16 9 5 6m0-6-5 6" /></svg></button><input data-volume type="range" min="0" max="1" step="0.01" value="0.45" aria-label="音量" aria-valuetext="45%" /></div>
       <span class="radio-ai">AI 生成</span>
-      <button class="radio-list-toggle" data-list-toggle type="button" aria-label="查看当前频道播放列表" aria-expanded="false" aria-controls="radio-playlist"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h9" /></svg><span data-track-count>{firstChannel.tracks.length} 首</span></button>
+      <button class="radio-list-toggle" data-list-toggle type="button" aria-label="展开曲库" aria-expanded="false" aria-controls="radio-library"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h9" /></svg><span>曲库</span></button>
     </footer>
-    <div class="radio-list-region" data-list-region hidden>
-    <ol id="radio-playlist" class="radio-playlist" data-playlist aria-label={`${firstChannel.title}曲目`}>
-      {radioChannels.flatMap(channel => channel.tracks.map(track => <li data-track-channel={channel.id} hidden={channel.id !== firstChannel.id}><button data-track={track.id} type="button" aria-current={track.id === first.id ? "true" : undefined} aria-label={`播放 ${track.title}`}><img src={radioCover(track)} data-track-cover={track.id} width="36" height="36" alt="" loading="lazy" /><span><span class="radio-list-title">{track.title}</span><span class="radio-list-mood">{track.mood}</span></span><span class="radio-list-duration">{time(track.duration)}</span></button></li>))}
-    </ol>
+    <div id="radio-library" class="radio-list-region" data-list-region hidden inert>
+      <div class="radio-library-views" data-library-views>
+        <div class="radio-library-view" data-track-view>
+          <div class="radio-library-heading">
+            <p class="radio-library-label"><span data-channel-title>{firstChannel.title}</span><span class="radio-library-count" data-track-count>{firstChannel.tracks.length} 首</span></p>
+            <button class="radio-library-link" data-channel-toggle type="button" aria-label={`切换频道，当前${firstChannel.title}`} aria-expanded="false" aria-controls="radio-channels">换频道<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></button>
+          </div>
+          <ol id="radio-playlist" class="radio-playlist" data-playlist aria-label={`${firstChannel.title}曲目`}>
+            {radioChannels.flatMap(channel => channel.tracks.map(track => <li data-track-channel={channel.id} hidden={channel.id !== firstChannel.id}><button data-track={track.id} type="button" aria-current={track.id === first.id ? "true" : undefined} aria-label={`播放 ${track.title}`}><img src={radioCover(track)} data-track-cover={track.id} width="36" height="36" alt="" loading="lazy" /><span><span class="radio-list-title">{track.title}</span><span class="radio-list-mood">{track.mood}</span></span><span class="radio-list-duration">{time(track.duration)}</span></button></li>))}
+          </ol>
+        </div>
+        <div id="radio-channels" class="radio-library-view" data-channel-region hidden inert>
+          <div class="radio-library-heading">
+            <button class="radio-library-link radio-library-back" data-channel-back type="button" aria-label="返回当前频道歌单"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>返回歌单</button>
+            <p class="radio-library-caption">选择频道</p>
+          </div>
+          <div class="radio-channels" data-channels role="group" aria-label="选择音乐频道">
+            {radioChannels.map(channel => <button data-channel={channel.id} type="button" aria-pressed={channel.id === firstChannel.id ? "true" : "false"}><span>{channel.title}</span><small>{channel.kind} · {channel.tracks.length} 首</small></button>)}
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -72,8 +81,8 @@ const time = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.flo
   .field-radio svg { display: block; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round; }
   .radio-launcher { position: absolute; left: 0; bottom: 0; width: max-content; display: flex; align-items: center; background: transparent; border: 0; border-radius: 40px; padding: 5px 9px 5px 5px; }
   .radio-open { display: flex; align-items: center; gap: 11px; background: none; border: 0; color: inherit; text-align: left; padding: 0 4px 0 0; border-radius: 30px; }
-  .radio-record { display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%; background: repeating-radial-gradient(circle, #1f3028 0 2px, #35443a 3px, #203027 4px); border: 3px solid #1f3028; box-shadow: 0 1px 3px #14271f40; animation: radio-spin 16s linear infinite; animation-play-state: paused; }
-  .radio-record img { width: 26px; height: 26px; object-fit: cover; border-radius: 50%; border: 1px solid #a8b78b; }
+  .radio-record { display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%; background: #1f3028; box-shadow: 0 1px 3px #14271f40; animation: radio-spin 16s linear infinite; animation-play-state: paused; }
+  .radio-record img { width: 36px; height: 36px; object-fit: cover; border-radius: 50%; }
   .radio-launcher-copy { display: grid; gap: 1px; min-width: 65px; }
   .radio-launcher-copy > span:first-child { font: 600 14px/1.65 var(--font-serif); letter-spacing: 1px; }
   .radio-launcher-copy > span:last-child { font-size: 10px; line-height: 1.7; color: var(--color-muted); }
@@ -81,18 +90,7 @@ const time = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.flo
   .radio-icon-button:hover, .radio-list-toggle:hover { background: #dce0cf; }
   .radio-mini-play { width: 38px; height: 44px; padding: 9px; }
   .radio-panel { position: absolute; left: 0; bottom: 0; width: 360px; max-height: calc(100dvh - 48px); overflow-y: auto; overscroll-behavior: contain; padding: 14px 24px 12px; border: 0; border-radius: 20px; background: transparent; }
-  .radio-heading-row { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; margin: 0 -8px 3px 0; background: var(--color-paper); box-shadow: 0 -16px var(--color-paper); }
-  .radio-channel-toggle { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; margin: 0 0 17px; padding: 0 10px; border: 1px solid var(--color-line); border-radius: 8px; background: transparent; color: var(--color-text); text-align: left; font-size: 12px; }
-  .radio-channel-caption { font-size: 10px; color: var(--color-muted); }
-  .radio-channel-toggle svg { width: 17px; height: 17px; margin-left: auto; transition: transform .4s var(--ease-out); }
-  .radio-channel-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
-  .radio-channel-toggle:hover { background: #e0e4d580; border-color: var(--color-line-strong); }
-  .radio-channel-region { overflow: hidden; }
-  .radio-channels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding-bottom: 18px; }
-  .radio-channels button { display: grid; gap: 3px; min-height: 54px; padding: 9px 11px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--color-text); text-align: left; font-size: 12px; }
-  .radio-channels small { font-size: 10px; color: var(--color-muted); }
-  .radio-channels button:hover { background: #e0e4d580; }
-  .radio-channels [aria-pressed="true"] { background: #e0e4d5; border-color: #b6c0ad; }
+  .radio-heading-row { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; margin: 0 -8px 14px 0; background: var(--color-paper); box-shadow: 0 -16px var(--color-paper); }
   .radio-heading-row h2 { display: flex; align-items: center; gap: 9px; font: 600 16px/1.5 var(--font-serif); letter-spacing: 1.5px; }
   .radio-signal { display: flex; align-items: center; gap: 3px; height: 15px; color: #627643; }
   .radio-signal i { display: block; width: 2px; height: 6px; border-radius: 2px; background: currentColor; }
@@ -134,7 +132,25 @@ const time = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.flo
   .radio-list-toggle { display: flex; align-items: center; justify-content: flex-end; gap: 6px; padding: 0 5px; height: 44px; border: 0; border-radius: 6px; background: none; font-size: 11px; color: #506346; white-space: nowrap; }
   .radio-list-toggle svg { width: 18px; height: 18px; }
   .radio-list-region { overflow: hidden; }
-  .radio-playlist { list-style: none; border-top: 1px solid #ccd0c3; margin: 6px 0 0; padding: 7px 0 0; max-height: 190px; overflow-y: auto; overscroll-behavior: contain; }
+  .radio-library-views { position: relative; height: var(--radio-library-height, 228px); margin-top: 6px; border-top: 1px solid var(--color-line); overflow: hidden; }
+  .radio-library-view { position: absolute; inset: 0; display: flex; flex-direction: column; min-height: 0; }
+  .radio-library-heading { flex: 0 0 44px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .radio-library-label { display: flex; align-items: baseline; gap: 9px; margin: 0; min-width: 0; font: 12px/1.5 var(--font-serif); }
+  .radio-library-count, .radio-library-caption { margin: 0; color: var(--color-muted); font: 10px/1.5 var(--font-sans); white-space: nowrap; }
+  .radio-library-link { display: inline-flex; align-items: center; justify-content: flex-end; flex-shrink: 0; gap: 4px; min-height: 44px; padding: 0 2px 0 6px; border: 0; border-radius: 4px; color: var(--color-accent); background: none; font: 11px/1.5 var(--font-sans); }
+  .radio-library-link svg { width: 14px; height: 14px; transition: transform .3s var(--ease-out); }
+  .radio-library-link:hover svg { transform: translateX(2px); }
+  .radio-library-back { padding-left: 0; }
+  .radio-library-back:hover svg { transform: translateX(-2px); }
+  .radio-library-link:hover { color: var(--color-text); }
+  .radio-playlist { list-style: none; flex: 1; min-height: 0; margin: 0; padding: 0 0 4px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--color-line-strong) transparent; }
+  .radio-channels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 5px 6px; flex: 1; min-height: 0; padding: 0 0 4px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--color-line-strong) transparent; }
+  .radio-channels button { position: relative; display: grid; gap: 3px; min-height: 54px; padding: 8px 10px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--color-text); text-align: left; font-size: 12px; transition: background .25s; }
+  .radio-channels small { font-size: 10px; color: var(--color-muted); }
+  .radio-channels button:hover { background: #e0e4d580; }
+  .radio-channels [aria-pressed="true"] { background: #e0e4d5; }
+  .radio-channels [aria-pressed="true"]::after { content: ""; position: absolute; right: 8px; top: 12px; width: 4px; height: 4px; border-radius: 50%; background: var(--color-accent); }
+  .radio-library-views button:focus-visible { outline: 1px solid var(--color-accent); outline-offset: -2px; }
   .radio-playlist button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 6px; border: 0; border-radius: 7px; text-align: left; background: transparent; color: inherit; }
   .radio-playlist button:hover, .radio-playlist [aria-current="true"] { background: #e0e4d5; }
   .radio-playlist button > img { width: 36px; height: 36px; object-fit: cover; border-radius: 4px; }
@@ -148,8 +164,6 @@ const time = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.flo
     .radio-launcher, .radio-panel { pointer-events: auto; }
 
     .radio-panel { width: min(calc(100vw - 26px - env(safe-area-inset-left) - env(safe-area-inset-right)), 380px); max-height: calc(100dvh - 24px - env(safe-area-inset-bottom)); padding-inline: 22px; }
-    .radio-list-region { overflow: hidden; }
-  .radio-playlist { max-height: 155px; }
   }
   .radio-icon-button, .radio-main-play { transition: background .25s, transform .25s var(--ease-out); }
   .radio-main-play:hover { transform: scale(1.06); }
@@ -164,8 +178,7 @@ const time = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.flo
   @keyframes radio-signal { from { transform: scaleY(.45); } to { transform: scaleY(1); } }
   @media (max-height: 680px) {
     .radio-panel { padding-top: 8px; }
-    .radio-channel-toggle { margin-bottom: 12px; }
-    .radio-channels { gap: 4px; padding-bottom: 12px; }
+    .radio-heading-row { margin-bottom: 10px; }
     .radio-channels button { min-height: 48px; padding: 6px 9px; line-height: 1.5; }
     .radio-channels small { line-height: 1.4; }
     .radio-cover { width: 64px; height: 64px; }
@@ -173,6 +186,16 @@ const time = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.flo
     .radio-track-copy h3 { font-size: 18px; }
     .radio-message { margin-top: 12px; }
     .radio-transport { padding-block: 6px 10px; }
+  }
+  @media (max-height: 520px) {
+    .radio-panel { padding-block: 6px 8px; }
+    .radio-heading-row { margin-bottom: 6px; }
+    .radio-cover { width: 56px; height: 56px; }
+    .radio-mood { margin-bottom: 2px; }
+    .radio-artist { margin-top: 3px; }
+    .radio-message { margin-top: 8px; }
+    .radio-transport { padding-block: 4px 8px; }
+    .radio-main-play { width: 48px; height: 48px; }
   }
   @media (prefers-reduced-motion: reduce) {
     .radio-record, .radio-panel, .field-radio[data-playing] .radio-signal i { animation: none; }

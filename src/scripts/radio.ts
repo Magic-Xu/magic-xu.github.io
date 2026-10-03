@@ -1,5 +1,5 @@
 import { gsap } from "gsap";
-import { radioChannels, radioCover, defaultRadioCover } from "../data/radio";
+import { radioChannels, radioCover, defaultRadioCover, defaultRadioChannel } from "../data/radio";
 
 function initRadio() {
   const candidate = document.querySelector<HTMLElement>("[data-radio]");
@@ -14,10 +14,10 @@ function initRadio() {
   const playlist = el("playlist");
   const launcher = el("launcher");
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
-  const regions = {
-    list: { element: el("list-region"), button: el("list-toggle"), open: false },
-    channel: { element: el("channel-region"), button: el("channel-toggle"), open: false },
-  };
+  const library = { element: el("list-region"), button: el("list-toggle"), open: false };
+  const libraryViews = { tracks: el("track-view"), channels: el("channel-region") };
+  let libraryView: keyof typeof libraryViews = "tracks";
+  let viewMotion: gsap.core.Timeline | undefined;
   let opened = false;
   let panelMotion: gsap.core.Timeline | undefined;
   let layoutMotion: gsap.core.Timeline | undefined;
@@ -30,7 +30,7 @@ function initRadio() {
   const channelButtons = root.querySelectorAll<HTMLButtonElement>("[data-channel]");
   const failedCovers = new Set<string>();
   const storageKey = "magic-field-radio";
-  let channel = radioChannels[0];
+  let channel = defaultRadioChannel;
   let index = 0;
   let userVolume = .45;
   let previousVolume = .45;
@@ -57,6 +57,10 @@ function initRadio() {
   } catch { /* Ignore invalid or unavailable preferences. */ }
   previousVolume = userVolume || .45;
   const applyVolume = () => { audio.volume = Math.min(1, Math.max(0, userVolume * gain.value)); };
+  const settleVolume = () => {
+    gainMotion?.kill(); gainMotion = undefined;
+    gain.value = 1; applyVolume();
+  };
   applyVolume();
 
   function updateVolume() {
@@ -85,7 +89,7 @@ function initRadio() {
   }
   function message(text: string) { el("message").textContent = text; }
   function failure() {
-    gainMotion?.kill(); gain.value = 1; applyVolume();
+    settleVolume();
     wantsPlay = false;
     hasError = true;
     root.setAttribute("data-error", "");
@@ -151,7 +155,7 @@ function initRadio() {
     hasError = false;
     wantsPlay = true;
     root.removeAttribute("data-error");
-    gainMotion?.kill(); gain.value = fadeIn ? 0 : 1; applyVolume();
+    gainMotion?.kill(); gain.value = fadeIn && !document.hidden ? 0 : 1; applyVolume();
     if (!audio.getAttribute("src") || retry) {
       audio.src = currentTrack().src;
       audio.load();
@@ -160,11 +164,13 @@ function initRadio() {
     try {
       await audio.play();
       if (thisRequest !== requestId) return;
-      if (fadeIn) gainMotion = gsap.to(gain, { value: 1, duration: .48, ease: "sine.out", onUpdate: applyVolume });
+      // The tab may have become hidden while the native play request was loading.
+      if (fadeIn && !document.hidden) gainMotion = gsap.to(gain, { value: 1, duration: .48, ease: "sine.out", onUpdate: applyVolume });
+      else settleVolume();
       message("正在播放，慢慢听。"); updatePlayback();
     } catch (error) {
       if (thisRequest !== requestId) return;
-      gain.value = 1; applyVolume();
+      settleVolume();
       if (error instanceof DOMException && error.name === "NotAllowedError") {
         wantsPlay = false; message("点播放按钮，开始听音乐。"); updatePlayback();
       } else failure();
@@ -174,7 +180,7 @@ function initRadio() {
     gainMotion?.kill();
     audio.pause(); audio.removeAttribute("src"); audio.preload = "none"; audio.load();
     switchPending = false;
-    gain.value = 1; applyVolume(); updateProgress();
+    settleVolume(); updateProgress();
     if (shouldPlay) void play(true);
     else { wantsPlay = false; message("让音乐陪你待一会儿。"); updatePlayback(); }
   }
@@ -182,7 +188,7 @@ function initRadio() {
     requestId++; wantsPlay = false;
     gainMotion?.kill();
     if (switchPending) commitSelection(false);
-    else { audio.pause(); gain.value = 1; applyVolume(); }
+    else { audio.pause(); settleVolume(); }
     if (!hasError) message("已暂停，随时接着听。");
     updatePlayback();
   }
@@ -197,8 +203,8 @@ function initRadio() {
       gsap.fromTo(el("cover"), { opacity: .35, scale: .94 }, { opacity: 1, scale: 1, duration: .4, ease: "power2.out", overwrite: true, clearProps: "opacity,transform" });
       gsap.fromTo(el("title"), { opacity: .4, y: 5 }, { opacity: 1, y: 0, duration: .35, ease: "power2.out", overwrite: true, clearProps: "opacity,transform" });
     }
-    if (opened) animateRegions();
-    if (wasPlaying && shouldPlay && !audio.muted) {
+    if (opened) animateLibrary();
+    if (wasPlaying && shouldPlay && !audio.muted && !document.hidden) {
       gainMotion = gsap.to(gain, { value: 0, duration: .16, ease: "sine.inOut", onUpdate: applyVolume, onComplete: () => commitSelection(true) });
     } else commitSelection(shouldPlay);
   }
@@ -206,33 +212,46 @@ function initRadio() {
     const next = radioChannels.find(item => item.id === id);
     if (!next) return;
     const shouldPlay = wantsPlay;
-    regions.channel.open = false;
-    regions.channel.button.setAttribute("aria-expanded", "false");
-    regions.channel.button.focus({ preventScroll: true });
-    if (next === channel) { animateRegions(); return; }
-    channel = next;
-    playlist.scrollTop = 0;
-    selectTrack(0, shouldPlay);
+    if (next !== channel) {
+      channel = next;
+      playlist.scrollTop = 0;
+      selectTrack(0, shouldPlay);
+    }
+    setLibraryView("tracks");
   }
   function targetSize(open: boolean) {
     const target = open ? panel : launcher;
     const hidden = target.hidden;
     target.hidden = false;
+    if (open) {
+      // Both library views share the space left beneath the actual playback controls.
+      const baseHeight = panel.scrollHeight - (library.element.hidden ? 0 : library.element.offsetHeight);
+      const available = parseFloat(getComputedStyle(panel).maxHeight) - baseHeight - 8;
+      el("library-views").style.setProperty("--radio-library-height", `${Math.max(88, Math.min(228, available))}px`);
+    }
     const size = { width: target.offsetWidth + 2, height: target.offsetHeight + 2 };
     target.hidden = hidden;
     return size;
   }
-  function settleRegions() {
-    for (const region of Object.values(regions)) {
-      region.element.hidden = !region.open;
-      region.element.inert = !region.open;
-      gsap.set(region.element, { height: "auto", opacity: 1 });
+  function settleViews() {
+    viewMotion?.kill(); viewMotion = undefined;
+    for (const [name, view] of Object.entries(libraryViews)) {
+      view.hidden = name !== libraryView;
+      view.inert = !library.open || name !== libraryView;
+      gsap.set(view, { clearProps: "opacity,transform" });
     }
+    el("channel-toggle").setAttribute("aria-expanded", String(libraryView === "channels"));
+  }
+  function settleLibrary() {
+    library.element.hidden = !library.open;
+    library.element.inert = !library.open;
+    gsap.set(library.element, { height: "auto", opacity: 1 });
+    if (!library.open) { libraryView = "tracks"; settleViews(); }
   }
   function settleSize() {
     panelMotion?.kill(); layoutMotion?.kill();
     gsap.killTweensOf(root, "width,height,borderRadius");
-    settleRegions();
+    settleLibrary(); settleViews();
     panel.hidden = !opened; launcher.hidden = opened;
     panel.inert = !opened; launcher.inert = opened;
     gsap.set([panel, launcher], { clearProps: "opacity,visibility,transform" });
@@ -246,7 +265,7 @@ function initRadio() {
   function setOpen(open: boolean, restoreFocus = true) {
     if (open === opened) return;
     finishEntrance(); opened = open;
-    panelMotion?.kill(); layoutMotion?.kill(); settleRegions();
+    panelMotion?.kill(); layoutMotion?.kill(); settleLibrary(); settleViews();
     const panelWasHidden = panel.hidden, launcherWasHidden = launcher.hidden;
     panel.hidden = false; launcher.hidden = false;
     panel.inert = !open; launcher.inert = open;
@@ -269,41 +288,60 @@ function initRadio() {
     panelMotion.to(open ? launcher : panel, { autoAlpha: 0, y: open ? -7 : 15, duration: .18, ease: "power2.out" }, 0);
     panelMotion.to(open ? panel : launcher, { autoAlpha: 1, y: 0, duration: open ? .38 : .3, ease: "power2.out" }, open ? .18 : .17);
   }
-  function animateRegions() {
+  function animateLibrary() {
     layoutMotion?.kill();
     if (reduced.matches || !opened) { settleSize(); return; }
-    const items = Object.values(regions).map(region => ({ ...region, height: region.element.hidden ? 0 : region.element.offsetHeight, opacity: region.element.hidden ? 0 : Number(gsap.getProperty(region.element, "opacity")) }));
-    // Measure natural destinations together, then restore the visible intermediate sizes.
-    for (const item of items) {
-      item.element.hidden = false; item.element.inert = !item.open;
-      gsap.set(item.element, { height: item.open ? "auto" : 0 });
-    }
-    const heights = items.map(item => item.element.offsetHeight);
+    const region = library.element;
+    const height = region.hidden ? 0 : region.offsetHeight;
+    const opacity = region.hidden ? 0 : Number(gsap.getProperty(region, "opacity"));
+    region.hidden = false; region.inert = !library.open;
+    gsap.set(region, { height: library.open ? "auto" : 0 });
     const destination = targetSize(true);
-    layoutMotion = gsap.timeline({ onComplete: () => { settleRegions(); gsap.set(root, targetSize(opened)); } });
-    items.forEach((item, i) => {
-      gsap.set(item.element, { height: item.height, opacity: item.opacity });
-      layoutMotion!.to(item.element, { height: heights[i], opacity: item.open ? 1 : 0, duration: .48, ease: "power3.inOut" }, 0);
-    });
+    const targetHeight = region.offsetHeight;
+    gsap.set(region, { height, opacity });
+    layoutMotion = gsap.timeline({ onComplete: () => { settleLibrary(); gsap.set(root, targetSize(opened)); } });
+    layoutMotion.to(region, { height: targetHeight, opacity: library.open ? 1 : 0, duration: .48, ease: "power3.inOut" }, 0);
     layoutMotion.to(root, { ...destination, duration: .48, ease: "power3.inOut", overwrite: "auto" }, 0);
   }
-  function setRegion(name: keyof typeof regions, open: boolean) {
-    const region = regions[name];
-    region.open = open;
-    region.button.setAttribute("aria-expanded", String(open));
-    if (!open && region.element.contains(document.activeElement)) region.button.focus({ preventScroll: true });
-    animateRegions();
-    if (name === "list" && open) {
+  function setLibraryOpen(open: boolean) {
+    library.open = open;
+    library.button.setAttribute("aria-expanded", String(open));
+    library.button.setAttribute("aria-label", open ? "收起曲库" : "展开曲库");
+    if (!open && library.element.contains(document.activeElement)) library.button.focus({ preventScroll: true });
+    for (const [name, view] of Object.entries(libraryViews)) view.inert = !open || name !== libraryView;
+    animateLibrary();
+    if (open && libraryView === "tracks") {
       const active = playlist.querySelector<HTMLElement>('[aria-current="true"]');
       playlist.scrollTop = Math.max(0, (active?.offsetTop || 0) - playlist.offsetTop - 45);
     }
+  }
+  function setLibraryView(view: keyof typeof libraryViews) {
+    if (!library.open || view === libraryView) return;
+    viewMotion?.kill();
+    const outgoing = libraryViews[libraryView], incoming = libraryViews[view];
+    const wasHidden = incoming.hidden, direction = view === "channels" ? 1 : -1;
+    libraryView = view;
+    outgoing.inert = true;
+    incoming.hidden = false; incoming.inert = false;
+    el("channel-toggle").setAttribute("aria-expanded", String(view === "channels"));
+    if (wasHidden) gsap.set(incoming, { opacity: 0, x: direction * 12 });
+    const focus = view === "channels" ? root.querySelector<HTMLButtonElement>('[data-channel][aria-pressed="true"]')! : el("channel-toggle");
+    if (view === "channels") {
+      const picker = el("channels");
+      picker.scrollTop = Math.max(0, focus.offsetTop - picker.offsetTop - (picker.clientHeight - focus.offsetHeight) / 2);
+    }
+    focus.focus({ preventScroll: true });
+    if (reduced.matches) { settleViews(); return; }
+    viewMotion = gsap.timeline({ onComplete: settleViews });
+    viewMotion.to(outgoing, { opacity: 0, x: -direction * 12, duration: .2, ease: "power2.out" }, 0);
+    viewMotion.to(incoming, { opacity: 1, x: 0, duration: .32, ease: "power2.out" }, .08);
   }
   openButton.addEventListener("click", () => setOpen(true));
   el("close").addEventListener("click", () => setOpen(false));
   document.addEventListener("keydown", event => {
     if (event.key !== "Escape" || !opened) return;
     event.preventDefault();
-    if (regions.channel.open) setRegion("channel", false);
+    if (library.open && libraryView === "channels") setLibraryView("tracks");
     else setOpen(false);
   });
   document.addEventListener("pointerdown", event => { if (opened && event.target instanceof Node && !root.contains(event.target)) setOpen(false, false); });
@@ -317,8 +355,9 @@ function initRadio() {
     if (next >= 0) selectTrack(next);
   }));
   channelButtons.forEach(button => button.addEventListener("click", () => selectChannel(button.dataset.channel!)));
-  regions.list.button.addEventListener("click", () => setRegion("list", !regions.list.open));
-  regions.channel.button.addEventListener("click", () => setRegion("channel", !regions.channel.open));
+  library.button.addEventListener("click", () => setLibraryOpen(!library.open));
+  el("channel-toggle").addEventListener("click", () => setLibraryView("channels"));
+  el("channel-back").addEventListener("click", () => setLibraryView("tracks"));
   window.addEventListener("resize", () => resizeTimer.restart(true));
   reduced.addEventListener("change", () => {
     if (reduced.matches) {
@@ -366,6 +405,14 @@ function initRadio() {
   audio.addEventListener("error", () => { if (audio.getAttribute("src") && !switchPending) failure(); });
   audio.addEventListener("ended", () => { if (!switchPending) selectTrack(index + 1); });
   audio.addEventListener("volumechange", updateVolume);
+  document.addEventListener("visibilitychange", () => {
+    // Hidden tabs suspend animation frames. Audio and track changes must not wait
+    // for a visual tween, or the next track can advance with its volume at zero.
+    if (document.hidden) {
+      if (switchPending) commitSelection(wantsPlay);
+      else settleVolume();
+    } else { updateProgress(); updatePlayback(); }
+  });
   // Astro preserves this node; older browsers may pause media when moving it.
   document.addEventListener("astro:before-swap", () => { changingPage = true; finishEntrance(); });
   document.addEventListener("astro:after-swap", () => {

@@ -41,9 +41,9 @@ export const radioChannels: RadioChannel[] = [
     instrumental("wild-012", "一个人的工作室", "电钢琴 · 木吉他"),
   ] },
   { id: "travel", title: "旅行与自由", kind: "纯音乐", tracks: [
+    instrumental("wild-015", "没有时刻表", "古典吉他 · 钢琴"),
     instrumental("wild-013", "风从旷野来", "指弹吉他 · 曼陀林"),
     instrumental("wild-014", "沿着河往前", "手碟 · 尼龙吉他"),
-    instrumental("wild-015", "没有时刻表", "古典吉他 · 钢琴"),
     instrumental("wild-016", "把时间还给自己", "合成器 · 毛毡钢琴"),
   ] },
   { id: "night", title: "夜色与休息", kind: "纯音乐", tracks: [
@@ -61,4 +61,5 @@ export const radioChannels: RadioChannel[] = [
   ].map(assetTrack) },
 ];
 
+export const defaultRadioChannel = radioChannels.find(channel => channel.id === "travel")!;
 export const radioTracks = radioChannels.flatMap(channel => channel.tracks);

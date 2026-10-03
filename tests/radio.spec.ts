@@ -3,6 +3,7 @@ import { radioChannels, radioTracks, defaultRadioCover } from '../src/data/radio
 import type { Page } from '@playwright/test';
 
 async function chooseChannel(page: Page, id: string) {
+  if (await page.locator('[data-list-toggle]').getAttribute('aria-expanded') !== 'true') await page.locator('[data-list-toggle]').click();
   await page.locator('[data-channel-toggle]').click();
   await page.locator(`button[data-channel="${id}"]`).click();
   await expect(page.locator('[data-radio]')).toHaveAttribute('data-channel', id);
@@ -20,8 +21,10 @@ test('all 25 tracks play with their own artwork, channel lists and bounded previ
   await page.goto('/about/');
   await page.locator('[data-open]').click();
   expect(audioRequests).toEqual([]);
-  await expect(page.locator('[data-channel-title]')).toHaveText('山野与晨光');
+  await expect(page.locator('[data-channel-title]')).toHaveText('旅行与自由');
+  await expect(page.locator('[data-title]')).toHaveText('没有时刻表');
   await page.locator('[data-list-toggle]').click();
+  await expect(page.locator('[data-playlist] button:visible').first()).toHaveAttribute('data-track', 'wild-015');
   for (const channel of radioChannels) {
     await chooseChannel(page, channel.id);
     await expect(page.locator('[data-playlist] button:visible')).toHaveCount(channel.tracks.length);
@@ -96,7 +99,7 @@ test('channel choice respects play intent, fades sound, survives navigation and 
   expect(requests).toEqual([]);
 });
 
-test('panel, playlist and channel picker animate continuously and fit small screens', async ({ page }) => {
+test('panel and library animate continuously, while channel browsing keeps playback controls stationary', async ({ page }) => {
   await page.goto('/about/');
   const radio = page.locator('[data-radio]');
   const closedHeight = (await radio.boundingBox())!.height;
@@ -112,21 +115,50 @@ test('panel, playlist and channel picker animate continuously and fit small scre
   await expect(page.locator('[data-panel]')).toBeHidden();
   await expect.poll(async () => Math.abs((await radio.boundingBox())!.height - closedHeight)).toBeLessThan(2);
   await page.locator('[data-open]').click(); await page.waitForTimeout(650);
-  for (const region of ['list', 'channel']) {
-    const baseHeight = (await radio.boundingBox())!.height;
-    await page.locator(`[data-${region}-toggle]`).click(); await page.waitForTimeout(180);
-    expect((await radio.boundingBox())!.height).toBeGreaterThan(baseHeight + 10);
-    for (let i = 0; i < 4; i++) { await page.locator(`[data-${region}-toggle]`).click(); await page.waitForTimeout(100); }
-    await page.waitForTimeout(600);
-    expect(Math.abs((await radio.boundingBox())!.height - (await page.locator('[data-panel]').boundingBox())!.height - 2)).toBeLessThan(2);
+  const baseHeight = (await radio.boundingBox())!.height;
+  await page.locator('[data-list-toggle]').click(); await page.waitForTimeout(180);
+  expect((await radio.boundingBox())!.height).toBeGreaterThan(baseHeight + 10);
+  for (let i = 0; i < 4; i++) { await page.locator('[data-list-toggle]').click(); await page.waitForTimeout(100); }
+  await page.waitForTimeout(600);
+  expect(Math.abs((await radio.boundingBox())!.height - (await page.locator('[data-panel]').boundingBox())!.height - 2)).toBeLessThan(2);
+  const before = await page.locator('.radio-now').boundingBox();
+  const libraryHeight = (await radio.boundingBox())!.height;
+  await page.locator('[data-channel-toggle]').click(); await page.waitForTimeout(140);
+  const alpha = await page.locator('[data-channel-region]').evaluate(e => Number(getComputedStyle(e).opacity));
+  expect(alpha).toBeGreaterThan(0); expect(alpha).toBeLessThan(1);
+  expect(Math.abs((await page.locator('.radio-now').boundingBox())!.y - before!.y)).toBeLessThan(1);
+  for (let i = 0; i < 3; i++) {
+    await page.keyboard.press('Escape'); await page.waitForTimeout(80);
+    await page.locator('[data-channel-toggle]').dispatchEvent('click'); await page.waitForTimeout(100);
   }
+  await page.waitForTimeout(450);
+  await expect(page.locator('[data-track-view]')).toBeHidden();
+  await expect(page.locator('[data-channel-region]')).toBeVisible();
+  expect(Math.abs((await radio.boundingBox())!.height - libraryHeight)).toBeLessThan(1);
+  await page.locator('[data-channel-back]').click();
+  await expect(page.locator('[data-channel-toggle]')).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('button[data-channel="travel"]')).toBeFocused();
   for (const size of [{ width: 390, height: 844 }, { width: 320, height: 568 }, { width: 768, height: 480 }]) {
     await page.setViewportSize(size); await page.waitForTimeout(300); await fitsViewport(page);
     await page.locator('button[data-channel="vocals"]').click();
     await expect(page.locator('[data-channel-toggle]')).toBeFocused();
     await page.locator('button[data-track="before-love"]').click();
     await expect(page.locator('[data-title]')).toHaveText('愛してるより先に');
+    await page.waitForTimeout(550);
+    const cover = (await page.locator('[data-cover]').boundingBox())!;
+    await page.locator('[data-playlist]').evaluate(e => e.scrollTop = e.scrollHeight);
+    expect(Math.abs((await page.locator('[data-cover]').boundingBox())!.y - cover.y)).toBeLessThan(1);
+    expect(await page.locator('[data-panel]').evaluate(e => e.scrollHeight - e.clientHeight)).toBeLessThanOrEqual(1);
+    const sizeBefore = (await radio.boundingBox())!.height;
     await page.locator('[data-channel-toggle]').click();
+    await page.waitForTimeout(450);
+    expect(Math.abs((await radio.boundingBox())!.height - sizeBefore)).toBeLessThan(1);
+    for (const channel of radioChannels) {
+      await page.locator(`button[data-channel="${channel.id}"]`).scrollIntoViewIfNeeded();
+      await expect(page.locator(`button[data-channel="${channel.id}"]`)).toBeInViewport();
+    }
+    expect(Math.abs((await page.locator('[data-cover]').boundingBox())!.y - cover.y)).toBeLessThan(1);
   }
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.keyboard.press('Escape'); // Channel picker closes before the panel.
@@ -140,7 +172,8 @@ test('panel, playlist and channel picker animate continuously and fit small scre
 
 test('rapid channel changes and a pause during the fade retain the latest choice', async ({ page }) => {
   await page.goto('/about/'); await page.locator('[data-open]').click();
-  await page.locator('[data-panel] [data-play]').click(); await playingTrack(page, 'wild-001');
+  await page.locator('[data-list-toggle]').click();
+  await page.locator('[data-panel] [data-play]').click(); await playingTrack(page, 'wild-015');
   // Overlap the fading audio and opening/closing regions with actual button events.
   await page.evaluate(() => {
     const click = (selector: string) => document.querySelector<HTMLButtonElement>(selector)!.click();
@@ -170,8 +203,8 @@ test('older track-only preferences migrate, and invalid or refused storage keeps
       await page.goto(`${baseURL}/about/`);
       await page.locator('[data-open]').click();
       const legacy = preference.includes('before-love');
-      await expect(page.locator('[data-title]')).toHaveText(legacy ? '愛してるより先に' : '山谷醒来');
-      await expect(page.locator('[data-channel-title]')).toHaveText(legacy ? '人声精选' : '山野与晨光');
+      await expect(page.locator('[data-title]')).toHaveText(legacy ? '愛してるより先に' : '没有时刻表');
+      await expect(page.locator('[data-channel-title]')).toHaveText(legacy ? '人声精选' : '旅行与自由');
       expect(await page.locator('audio').evaluate((a: HTMLAudioElement) => a.paused && !a.getAttribute('src'))).toBe(true);
       await chooseChannel(page, 'night');
       await page.locator('[data-panel] [data-play]').click(); await playingTrack(page, 'wild-017');
@@ -180,27 +213,27 @@ test('older track-only preferences migrate, and invalid or refused storage keeps
 });
 
 test('failed artwork uses the shared cover everywhere, then a healthy track restores its own artwork', async ({ page }) => {
-  await page.route('**/music/wild-001/cover.webp', route => route.abort());
+  await page.route('**/music/wild-015/cover.webp', route => route.abort());
   await page.goto('/about/'); await page.locator('[data-open]').click();
   await page.locator('[data-list-toggle]').click();
-  for (const selector of ['[data-cover]', '[data-disc-cover]', '[data-track-cover="wild-001"]']) {
+  for (const selector of ['[data-cover]', '[data-disc-cover]', '[data-track-cover="wild-015"]']) {
     await expect(page.locator(selector)).toHaveAttribute('src', defaultRadioCover);
     await expect.poll(() => page.locator(selector).evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
   }
-  await page.locator('button[data-track="wild-002"]').click();
-  for (const selector of ['[data-cover]', '[data-disc-cover]']) await expect(page.locator(selector)).toHaveAttribute('src', '/music/wild-002/cover.webp');
-  await page.locator('button[data-track="wild-001"]').click();
+  await page.locator('button[data-track="wild-013"]').click();
+  for (const selector of ['[data-cover]', '[data-disc-cover]']) await expect(page.locator(selector)).toHaveAttribute('src', '/music/wild-013/cover.webp');
+  await page.locator('button[data-track="wild-015"]').click();
   await expect(page.locator('[data-cover]')).toHaveAttribute('src', defaultRadioCover);
 });
 
 test('a failed audio request offers a working retry', async ({ page }) => {
-  await page.route('**/music/wild-001/audio.mp3', route => route.abort());
+  await page.route('**/music/wild-015/audio.mp3', route => route.abort());
   await page.goto('/about/'); await page.locator('[data-open]').click();
   await page.locator('[data-panel] [data-play]').click();
   await expect(page.locator('[data-radio]')).toHaveAttribute('data-error');
   await expect(page.locator('[data-message]')).toContainText('重试');
-  await page.unroute('**/music/wild-001/audio.mp3');
+  await page.unroute('**/music/wild-015/audio.mp3');
   await page.locator('[data-panel] [data-play]').click();
-  await playingTrack(page, 'wild-001');
+  await playingTrack(page, 'wild-015');
   await expect(page.locator('[data-radio]')).not.toHaveAttribute('data-error');
 });
