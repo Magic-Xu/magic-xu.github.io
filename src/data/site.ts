@@ -12,7 +12,7 @@ export const siteConfig: SiteConfig = {
 	title: "小麦在野",
 	description: "我是小麦，也叫 MagicXu。这里记录 AI、独立开发，以及更自由的工作与生活。",
 	slogan: "做自己的产品，记录真实的探索。",
-	url: "https://magic-xu.github.io",
+	url: "https://magicxu.com",
 	author: "MagicXu",
 	github: "https://github.com/Magic-Xu",
 	email: "magicalxu666@gmail.com"
