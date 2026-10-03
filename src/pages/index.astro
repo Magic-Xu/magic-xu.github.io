@@ -3,14 +3,19 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Arrow from "../components/Arrow.astro";
 import { getPublishedPosts } from "../lib/blog";
 import { siteConfig } from "../data/site";
+import LandscapeStartup from '../components/LandscapeStartup.astro';
+import { readFileSync } from 'node:fs';
+const preview = readFileSync('public/landscape/alpine-preview.webp').toString('base64');
+const previewMobile = readFileSync('public/landscape/alpine-preview-mobile.webp').toString('base64');
 const posts = (await getPublishedPosts()).slice(0, 3);
 const shortTitle = (title: string) => title.replace(/^独立 App 开发系列：\s*/, "");
 ---
 <BaseLayout metaDescription={siteConfig.description} home>
-  <section class="home-hero" aria-labelledby="home-title" data-scene="fallback">
+  <section class="home-hero" aria-labelledby="home-title" data-scene="fallback" style={`--landscape-preview:url(data:image/webp;base64,${preview});--landscape-preview-mobile:url(data:image/webp;base64,${previewMobile})`}>
     <picture class="hero-landscape" aria-hidden="true">
       <source media="(max-width: 760px)" srcset="/landscape/alpine-poster-mobile.webp" /><img src="/landscape/alpine-poster.webp" width="1920" height="1080" alt="" fetchpriority="high" decoding="async" />
     </picture>
+    <img class="landscape-resume" alt="" aria-hidden="true" decoding="sync" hidden />
     <div class="landscape-world" data-landscape aria-hidden="true"></div>
     <div class="hero-shade" aria-hidden="true"></div>
     <div class="container hero-inner">
@@ -26,6 +31,7 @@ const shortTitle = (title: string) => title.replace(/^独立 App 开发系列：
         <a class="hero-scroll" href="#recent-title" aria-label="向下浏览最近的文章"><span>向下探索</span><Arrow /></a>
       </div></div>
     </div>
+    <LandscapeStartup />
   </section>
   <section class="home-journal container" aria-labelledby="recent-title">
     <p class="margin-label">沿途记录<span aria-hidden="true"></span></p>

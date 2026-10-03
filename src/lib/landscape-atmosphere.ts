@@ -59,6 +59,12 @@ export function createAtmosphere(renderer: THREE.WebGLRenderer, camera: THREE.Pe
   const screen = new THREE.Scene(); screen.add(new THREE.Mesh(geometry, material));
   const screenCamera = new THREE.Camera();
   return {
+    async prepare(scene: THREE.Scene) {
+      renderer.setRenderTarget(target);
+      await renderer.compileAsync(scene, camera);
+      renderer.setRenderTarget(null);
+      await renderer.compileAsync(screen, screenCamera);
+    },
     resize(width: number, height: number) { const ratio = renderer.getPixelRatio(); target.setSize(Math.floor(width * ratio), Math.floor(height * ratio)); },
     render(scene: THREE.Scene, time: number) {
       uniforms.time.value = time;
