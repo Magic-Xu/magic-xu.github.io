@@ -11,12 +11,15 @@
 | 完整回归 | `npm test` |
 | 首屏与刷新 | `npm run test:startup` |
 | 单个组件 | `npx playwright test tests/radio.spec.ts`，其他文件同理 |
+| 随笔/足迹有内容时的交互 | `npm run test:journal`，使用独立的测试样例构建 |
 | 交互式调试 | `npm run test:ui` |
 | 使用本机 Chrome | `PLAYWRIGHT_CHANNEL=chrome npm test` |
 | 验证已有预览或已部署网站 | `TEST_BASE_URL=https://example.com PLAYWRIGHT_CHANNEL=chrome npm test` |
 | 查看最近报告 | `npx playwright show-report` |
 
 提供 `TEST_BASE_URL` 时不会构建或启动服务，应先确认目标包含待验收的代码。测试只浏览公开页面、操作本地播放器和浏览器状态，不写入远端数据。路线测试始终使用本地资源。
+
+`npm run test:journal` 固定使用 `127.0.0.1:4331` 的独立测试服务，忽略 `TEST_BASE_URL`。它通过 `JOURNAL_TEST_DATA=1` 读取 `tests/fixtures/journal/`，构建到 `.journal-test-dist/`；正常 `dist/` 与本地正式预览保持不变。测试结束后关闭服务。样例只验证未来有内容时的列表、地图与交互，不作为作者真实经历发布。CI 在第一分片的常规验证后运行这组用例。
 
 HTML 报告在 `playwright-report/`，结构化结果在 `test-results/report.json`。失败时保留截图和 Playwright trace；首屏交接用例附有主线程长任务数据。上述运行产物不提交到 Git。默认使用完整 Chromium 的无头模式；GitHub Actions 的 PR 检查和手动检查保留报告 14 天。CI 将全部用例分到三个独立任务，每个任务仍只有一个浏览器 worker；软件 WebGL 下单个用例最多运行 180 秒。CI 降低行为测试的绘图像素密度以减少共享机器的负担；布局尺寸和行为断言不变，性能数字不能当成真实设备帧率。首帧像素对齐测试固定使用与参考画面一致的 1 倍像素密度，平均 RGB 误差须低于 1%，容纳不同渲染后端的轻微着色与过滤差异。
 
@@ -28,6 +31,8 @@ HTML 报告在 `playwright-report/`，结构化结果在 `test-results/report.js
 | `landscape.spec.ts` | 普通移动、轻点和低于阈值的移动不转向；按住拖动才转向，松手/区域外释放/失焦正确结束；暂停停止渲染；进入/退出和 Esc 同步文案与焦点，Esc 先关闭电台当前层级再退出漫游；偏好切换、资源或 Worker 失败、WebGL 丢失/恢复；加载途中切页清理资源；手机控制不重叠、触摸不接管滚动。 |
 | `radio.spec.ts` | 所有 25 首曲目与封面可用；6 个频道的列表、前后切歌与自动续播不串组；暂停切频道不下载或播放，播放切换有音量渐变；当前频道重复选择不重置进度，快速切换与中途暂停正确收敛；同一音频实例跨页保持；进度、音量、静音；刷新恢复偏好但不自动播放，旧偏好迁移及存储拒绝；面板、歌单和频道选择有中间尺寸、快速反向正确收敛；键盘、外部点击、短屏、封面失败回退和音频重试。 |
 | `content.spec.ts` | 作品详情动画与反向操作；减少动态效果后的内容可读；中文目录高亮、阅读进度；来源页 UTF-8、窄屏布局与返回。 |
+| `journal.spec.ts` | 正常构建下随笔/足迹空状态、没有示例记录与空地图、通往文章/作品的入口；四种宽度、键盘和无 JavaScript 可用；电台跨栏目持续播放。 |
+| `journal-content.spec.ts` | 独立样例构建下的随笔全文与年份、演示标注、关联足迹及返回导航；地图选择与直接锚点、连续反向展开、快速切换后的焦点与减少动态效果；四种宽度下导航与页面布局；无 JavaScript 阅读；电台跨新栏目持续播放且刷新不自动播放。 |
 | `route.spec.ts` | 从实际路线和高程采样 10,001 个位置，核对离地间距、影像边界与闭环接点连续性。 |
 
 相机测试观察真正发送到 WebGL 的矩阵，纹理渐变测试观察 shader uniform；不依赖与渲染脱节的测试状态。浏览器上下文相互隔离，首访用例不继承日常浏览器的缓存和存储。

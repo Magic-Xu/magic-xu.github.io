@@ -12,13 +12,15 @@ interface Props {
 	metaTitle?: string;
 	metaDescription?: string;
 	home?: boolean;
+	noIndex?: boolean;
 }
 
 const {
 	lang = "zh-CN",
 	metaTitle,
 	metaDescription = siteConfig.description,
-	home = false
+	home = false,
+	noIndex = false
 } = Astro.props;
 const pageTitle = metaTitle ? `${metaTitle} · ${siteConfig.title}` : siteConfig.title;
 const canonicalUrl = new URL(Astro.url.pathname, siteConfig.url);
@@ -30,6 +32,7 @@ const canonicalUrl = new URL(Astro.url.pathname, siteConfig.url);
 		<link rel="icon" href="/favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="description" content={metaDescription} />
+		{noIndex && <meta name="robots" content="noindex, nofollow" />}
 		<meta name="author" content={siteConfig.author} />
 		<meta name="generator" content={Astro.generator} />
 		<meta name="theme-color" content={home ? "#142921" : "#eeece3"} />

@@ -33,3 +33,13 @@ const isActive = (href: string) => {
 		</nav>
 	</div>
 </header>
+
+<style>
+	@media (max-width: 600px) {
+		.site-header .header-inner { display: grid; grid-template-columns: 1fr; gap: 2px; min-height: 108px; padding-block: 14px 7px; }
+		.site-header .site-brand { justify-self: start; line-height: 1.6; }
+		.site-header .site-nav { justify-content: space-between; gap: 4px; width: 100%; }
+		.site-header .nav-link { justify-content: center; min-width: 44px; min-height: 44px; }
+		.site-header .nav-link::after { left: 8px; right: 8px; bottom: 4px; }
+	}
+</style>

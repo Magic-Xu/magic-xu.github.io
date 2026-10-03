@@ -3,6 +3,7 @@ import process from 'node:process';
 
 export default defineConfig({
   testDir: './tests',
+  testIgnore: '**/journal-content.spec.ts',
   timeout: process.env.CI ? 180_000 : 60_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,

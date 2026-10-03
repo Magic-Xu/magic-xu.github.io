@@ -1,0 +1,16 @@
+---
+interface Props { kind: "随笔" | "足迹"; }
+const { kind } = Astro.props;
+---
+
+<aside class="journal-preview" aria-label="演示内容说明">
+	<span>演示内容</span>
+	<p>以下{kind}与日期用于体验页面，尚未替换成真实记录。</p>
+</aside>
+
+<style>
+	.journal-preview { display: flex; align-items: baseline; gap: 18px; margin-bottom: 38px; padding-block: 13px; border-block: 1px solid var(--color-line); color: var(--color-muted); font: 12px/1.8 var(--font-sans); }
+	.journal-preview span { flex: none; color: var(--color-accent); }
+	.journal-preview p { margin: 0; }
+	@media (max-width: 600px) { .journal-preview { gap: 12px; font-size: 11px; margin-bottom: 30px; } }
+</style>

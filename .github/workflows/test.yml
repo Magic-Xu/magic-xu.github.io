@@ -25,6 +25,8 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run check
       - run: npm test -- --fully-parallel --shard=${{ matrix.shard }}/3
+      - run: npm run test:journal
+        if: matrix.shard == 1
       - uses: actions/upload-artifact@v7
         if: always()
         with:

@@ -203,6 +203,19 @@ a:hover .arrow-icon { transform: translate(4px,-2px); }
   .site-header-hero .site-brand { font-size: 14px; }
   .hero-copy h1 { font-size: 53px; }
 }
+
+@media (max-width:600px) {
+  .home-hero { min-height: 620px; }
+  .home-hero .scene-journey, .home-hero .scene-toggle { top: 132px; }
+  .home-hero .hero-inner { padding-top: 178px; }
+  .article-prose h2, .personal-prose section, .project-entry, .featured-project { scroll-margin-top: 132px; }
+}
+@media (max-width:600px) and (max-height:680px) {
+  .home-hero { min-height: 560px; }
+  .home-hero .hero-copy { padding-bottom: 32px; }
+  .home-hero .hero-bottom-copy { margin-top: 20px; }
+  .home-hero .hero-link { margin-top: 18px; }
+}
 @media (prefers-reduced-motion:reduce) {
   .landscape-world, .hero-copy, .hero-shade { transition: none; }
   .recent-list a:hover { padding-inline: 0; }

@@ -5,6 +5,8 @@ export const zhCN: LocaleContent = {
 	navigation: [
 		{ href: "/writing/", label: "文章" },
 		{ href: "/projects/", label: "作品" },
+		{ href: "/footprints/", label: "足迹" },
+		{ href: "/notes/", label: "随笔" },
 		{ href: "/about/", label: "关于" }
 	],
 	home: {

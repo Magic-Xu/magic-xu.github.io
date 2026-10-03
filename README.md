@@ -34,12 +34,53 @@ npm test
 ## 内容维护
 
 - `src/content/blog/`：Markdown 文章；`draft: true` 的文章不会出现在列表、详情或 RSS 中。
+- `src/content/notes/`：短篇随笔，在 `/notes/` 按年份、日期倒序直接展示全文。
+- `src/content/footprints/`：旅行记录，在 `/footprints/` 按时间分组；地点图可定位并展开对应记录。
 - `src/pages/index.astro`：首页介绍与最近三篇文章。
 - `src/pages/about.astro`：个人介绍与联系方式。
 - `src/content/locales/zh-CN.ts`：导航、作品及文章列表文案。
 - `projects.featuredName` 指定重点项目；`writing.featuredPostId` 指定置顶文章的文件名（不含 `.md`）。置顶项单独展示，其余文章按时间倒序，首页与 RSS 仍按发布时间排序。
 - `src/data/site.ts`：网站地址、作者和公开联系方式。
 - `/subscribe/`：RSS 订阅说明与地址复制入口；`/rss.xml` 为按发布时间生成的文章摘要订阅源。
+
+### 随笔与足迹
+
+两个栏目目前没有公开记录，展示正式空状态：随笔引导阅读文章，足迹引导查看作品。空状态不展示年份、计数、地图或示例记录。向对应目录加入真实记录后，构建会自动显示列表与地图；`draft: true` 的记录不展示。随笔与足迹不进入文章 RSS。
+
+空栏目或含演示记录的页面设置 `noindex, nofollow`；有真实记录且不含演示内容时自动移除。真实记录不需要填写 `demo`，默认值为 `false`。测试样例放在 `tests/fixtures/journal/`，不进入常规构建；含样例的交互验证见 [测试说明](docs/testing.md)。
+
+每条记录使用独立 Markdown 文件，文件名是稳定的锚点 ID。随笔元数据示例：
+
+```yaml
+---
+date: 2026-09-20
+topic: 在路上
+footprint: hangzhou # 可选，对应足迹文件名，不含 .md
+draft: true
+---
+```
+
+正文直接放几句感悟，不必填写标题、摘要或阅读时长。关联的足迹必须存在且不为草稿，否则构建报错，避免留下无效入口。
+
+足迹元数据示例（演示）：
+
+```yaml
+---
+place: 杭州
+region: 浙江
+visitedAt: 2026-09-20
+longitude: 120.16
+latitude: 30.27
+summary: 西湖边，走一条没有计划的路。
+draft: true
+---
+```
+
+正文保存旅途的片段，当前每个地点维护一份记录。以上示例保持草稿状态；填写真实内容后，将 `draft` 设为 `false` 即可展示。日期以 `YYYY-MM-DD` 维护，按 UTC 日历日期显示，不随访客时区偏移。
+
+[`FootprintMap.astro`](src/components/FootprintMap.astro) 使用本地 SVG 海岸轮廓和经纬度定位，不请求在线地图服务。底图来自 [Natural Earth 1:110m Land](https://www.naturalearthdata.com/downloads/110m-physical-vectors/110m-land/)，按其[公共领域许可](https://www.naturalearthdata.com/about/terms-of-use/)投影为 `public/maps/east-asia-land.svg`。当前覆盖东经 96–126°、北纬 20–42°，不包含行政区边界；超出范围的记录仍出现在列表，但不在图上标点。拓展地域时一起更新底图与 [`journal.ts`](src/lib/journal.ts) 的 `mapExtent`，勿将越界地点挤到图边。
+
+[`footprints.ts`](src/scripts/footprints.ts) 处理地图选中、锚点定位和连续展开收起；无 JavaScript 时仍可用原生链接与 `details/summary` 阅读。主导航为「文章 / 作品 / 足迹 / 随笔 / 关于」，≤600px 时品牌与导航分成两行。
 
 ## 在野电台
 
