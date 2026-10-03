@@ -1,0 +1,105 @@
+---
+import { render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import JournalPreview from "../../components/JournalPreview.astro";
+import JournalEmpty from "../../components/JournalEmpty.astro";
+import FootprintMap from "../../components/FootprintMap.astro";
+import Arrow from "../../components/Arrow.astro";
+import { getFootprints, journalYear, journalDate, journalMonthDay } from "../../lib/journal";
+
+const entries = await getFootprints();
+const trips = await Promise.all(entries.map(async entry => ({ entry, ...await render(entry) })));
+const years = [...new Set(entries.map(entry => journalYear(entry.data.visitedAt)))];
+const hasDemo = entries.some(entry => entry.data.demo);
+---
+
+<BaseLayout metaTitle="足迹" metaDescription="走过的地方，沿途的记忆。小麦在野的旅行手记。" noIndex={hasDemo || !trips.length}>
+	<section class="section footprints-page" data-footprints>
+		<div class="container">
+			<header class="collection-heading" data-reveal-group>
+				<h1 class="page-title">走过的地方。</h1>
+				<p>收集沿途的风景，<br />也留一点当时的心情。</p>
+			</header>
+			{hasDemo && <JournalPreview kind="足迹" />}
+			{trips.length ? <div class="footprints-layout">
+				<aside class="footprints-atlas"><FootprintMap places={entries} /></aside>
+				<div class="footprints-journal">
+					<p class="footprints-count">{new Set(entries.map(entry => entry.data.place)).size} 个地点<span>·</span>{trips.length} 段记忆</p>
+					{years.map(year => <section class="trip-year" aria-labelledby={`trip-year-${year}`}>
+						<h2 id={`trip-year-${year}`}>{year}<span>年</span></h2>
+						{trips.filter(({ entry }) => journalYear(entry.data.visitedAt) === year).map(({ entry, Content }) => <details class="trip-entry" id={`footprint-${entry.id}`} data-trip={entry.id} open={entry === entries[0]}>
+							<summary>
+								<span class="trip-date"><time datetime={journalDate(entry.data.visitedAt)}>{journalMonthDay(entry.data.visitedAt)}</time></span>
+								<span class="trip-title"><span class="trip-place">{entry.data.place}{entry.data.region !== entry.data.place && <span class="trip-region">{entry.data.region}</span>}</span><span class="trip-description">{entry.data.summary}</span></span>
+								<span class="trip-arrow" aria-hidden="true"><Arrow direction="up-right" /></span>
+							</summary>
+							<div class="trip-expanded"><div class="trip-prose"><Content /></div></div>
+						</details>)}
+					</section>)}
+					<div class="footprints-colophon"><p>还有很多地方，慢慢去。</p><a class="text-link" href="/notes/">读一则随笔 <Arrow /></a></div>
+				</div>
+			</div> : <JournalEmpty kind="footprints" />}
+		</div>
+	</section>
+</BaseLayout>
+
+<script>
+	import "../../scripts/footprints";
+</script>
+
+<style>
+	.footprints-layout { display: grid; grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr); gap: clamp(40px, 5vw, 76px); align-items: start; }
+	.footprints-atlas { position: sticky; top: 125px; padding-top: 3px; }
+	.footprints-count { display: flex; gap: 12px; margin: 0 0 24px; color: var(--color-muted); font: 12px/1.8 var(--font-sans); }
+	.footprints-count span { opacity: .6; }
+	.trip-year + .trip-year { margin-top: 40px; }
+	.trip-year h2 { display: flex; align-items: baseline; gap: 10px; margin: 0; padding-bottom: 19px; border-bottom: 1px solid var(--color-line-strong); font: 400 30px/1.5 var(--font-serif); }
+	.trip-year h2 span { font: 12px var(--font-sans); color: var(--color-muted); }
+	.trip-entry { border-bottom: 1px solid var(--color-line); scroll-margin-top: 126px; }
+	.trip-entry summary { display: grid; grid-template-columns: 58px minmax(0, 1fr) 20px; align-items: start; gap: 19px; padding: 27px 0 25px; cursor: pointer; list-style: none; }
+	.trip-entry summary::-webkit-details-marker { display: none; }
+	.trip-date { padding-top: 7px; color: var(--color-muted); font: 11px/1.8 var(--font-sans); font-variant-numeric: tabular-nums; }
+	.trip-title, .trip-description { display: block; }
+	.trip-place { display: flex; align-items: baseline; gap: 13px; font: 400 25px/1.5 var(--font-serif); transition: color .25s; }
+	.trip-region { color: var(--color-muted); font: 11px/1.8 var(--font-sans); }
+	.trip-description { margin-top: 8px; color: var(--color-muted); font: 13px/1.85 var(--font-sans); }
+	.trip-arrow { display: block; margin-top: 5px; transition: transform .5s var(--ease-out); color: var(--color-accent); }
+	.trip-arrow :global(.arrow-icon) { width: 20px; height: 20px; }
+	.trip-entry[open]:not([data-expanded="false"]) .trip-arrow { transform: rotate(90deg); }
+	.trip-entry summary:hover .trip-place { color: var(--color-accent); }
+	.trip-entry summary:focus-visible { outline: 1px solid var(--color-accent); outline-offset: 5px; }
+	.trip-expanded { padding: 0 0 30px 77px; }
+	.trip-prose { font: 16px/2 var(--font-serif); overflow-wrap: anywhere; }
+	.trip-prose :global(p) { margin: 0; }
+	.trip-prose :global(p + p) { margin-top: 12px; }
+	.trip-prose :global(img) { max-width: 100%; height: auto; margin-block: 14px; }
+	.trip-prose :global(a) { text-decoration: underline; text-underline-offset: 4px; }
+	.footprints-colophon { margin-top: 34px; display: flex; align-items: center; justify-content: space-between; gap: 16px; color: var(--color-muted); font-size: 12px; }
+	.footprints-colophon p { margin: 0; }
+	.footprints-colophon a { font-size: 12px; flex: none; }
+	@media (max-width: 1100px) {
+		.footprints-layout { gap: 34px; }
+		.trip-entry summary { grid-template-columns: minmax(0, 1fr) 20px; gap: 8px 15px; }
+		.trip-date { grid-column: 1 / -1; padding: 0; }
+		.trip-expanded { padding-left: 0; }
+	}
+	@media (max-width: 760px) {
+		.footprints-layout { grid-template-columns: 1fr; gap: 44px; }
+		.footprints-atlas { position: static; padding: 0; }
+		.footprints-count { margin-bottom: 20px; }
+		.trip-entry { scroll-margin-top: 132px; }
+		.trip-entry summary { grid-template-columns: 58px minmax(0, 1fr) 20px; gap: 15px; }
+		.trip-date { grid-column: auto; padding-top: 5px; }
+		.trip-place { font-size: 23px; }
+		.trip-description { font-size: 12px; }
+		.trip-expanded { padding-left: 73px; }
+		.trip-year h2 { font-size: 28px; }
+	}
+	@media (max-width: 420px) {
+		.trip-entry summary { grid-template-columns: minmax(0, 1fr) 20px; gap: 8px 15px; }
+		.trip-date { grid-column: 1 / -1; padding: 0; }
+		.trip-expanded { padding-left: 0; }
+		.footprints-colophon { align-items: flex-start; flex-direction: column; gap: 8px; }
+	}
+	@media (prefers-reduced-motion: reduce) { .trip-arrow, .trip-place { transition: none; } }
+</style>

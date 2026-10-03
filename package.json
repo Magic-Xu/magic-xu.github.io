@@ -12,6 +12,7 @@
     "astro": "astro",
     "check": "astro sync && tsc --noEmit",
     "test": "playwright test",
+    "test:journal": "playwright test --config playwright.journal.config.ts",
     "test:startup": "playwright test tests/startup.spec.ts",
     "test:ui": "playwright test --ui",
     "landscape:posters": "node scripts/capture-landscape-posters.mjs",
