@@ -10,7 +10,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "check": "tsc --noEmit",
+    "check": "astro sync && tsc --noEmit",
     "test": "playwright test",
     "test:startup": "playwright test tests/startup.spec.ts",
     "test:ui": "playwright test --ui",

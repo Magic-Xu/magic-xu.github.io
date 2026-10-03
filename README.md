@@ -19,7 +19,7 @@ npm ci
 npm run dev
 ```
 
-`npm run check` 检查 TypeScript，`npm run build` 生成 `dist/`，`npm run preview` 预览构建结果。
+`npm run check` 先生成 Astro 类型再检查 TypeScript，首次检出即可执行；`npm run build` 生成 `dist/`，`npm run preview` 预览构建结果。
 
 ## 回归验证
 
