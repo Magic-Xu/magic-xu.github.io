@@ -70,6 +70,7 @@ test('Escape dismisses the radio channel picker and panel before leaving the lan
   const journey = page.locator('[data-scene-journey]');
   await journey.click();
   await page.locator('[data-open]').click();
+  await page.locator('[data-list-toggle]').click();
   await page.locator('[data-channel-toggle]').click();
   await page.keyboard.press('Escape');
   await expect(page.locator('[data-channel-region]')).toBeHidden();
