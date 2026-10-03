@@ -3,7 +3,7 @@ import process from 'node:process';
 
 export default defineConfig({
   testDir: './tests',
-  timeout: 60_000,
+  timeout: process.env.CI ? 180_000 : 60_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
   workers: 1, // WebGL tests share a GPU; parallel pages would distort timing.

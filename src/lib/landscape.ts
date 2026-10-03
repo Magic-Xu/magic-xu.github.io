@@ -135,7 +135,7 @@ export function createLandscape(host: HTMLElement) {
       speed = Math.min(1, speed + dt / 1.2);
       blendDetail(dt); last = now; render(dt, dt * speed); frameCount++;
       if (delta > (small ? .052 : .033)) slowFrames++;
-      if (frameCount === 100 && slowFrames > 55) { renderer.setPixelRatio(1); renderer.setSize(width, height); atmosphere?.resize(width, height); }
+      if (frameCount === 100 && slowFrames > 55) { renderer.setPixelRatio(Math.min(renderer.getPixelRatio(), 1)); renderer.setSize(width, height); atmosphere?.resize(width, height); }
     }
     raf = requestAnimationFrame(tick);
   }
