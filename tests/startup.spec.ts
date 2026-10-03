@@ -14,7 +14,7 @@ test.describe('opening frame alignment', () => {
   // Compare at the reference drawing density, independently of CI's lower
   // resolution for behavior tests. Downsampling the canvas first alters edges.
   test.use({ deviceScaleFactor: 1 });
-  for (const viewport of [{ width: 1440, height: 960 }, { width: 1800, height: 850 }, { width: 390, height: 844 }, { width: 320, height: 568 }]) {
+  for (const viewport of [{ width: 1440, height: 960 }, { width: 1800, height: 850 }, { width: 960, height: 640 }, { width: 390, height: 844 }, { width: 320, height: 568 }]) {
     test(`poster and stationary 3D frame align at ${viewport.width}px`, async ({ page }) => {
       await page.setViewportSize(viewport);
       await page.goto('/');
@@ -172,16 +172,26 @@ test('bottom entrances are gradual and revealing 3D controls never shifts the te
   let release!: () => void;
   const gate = new Promise<void>(resolve => release = resolve);
   await page.route('**/alpine-height.png', async route => { await gate; await route.continue(); });
-  await page.addInitScript(() => {
-    (window as any).__entrances = [];
-    document.addEventListener('animationstart', event => {
-      if (event.animationName !== 'horizon-item-enter') return;
-      const element = event.target as HTMLElement;
-      requestAnimationFrame(() => requestAnimationFrame(() => (window as any).__entrances.push({ className: element.className, opacity: Number(getComputedStyle(element).opacity), transform: getComputedStyle(element).transform })));
-    });
+  // Hold only these CSS entrances from their first frame. A software WebGL frame
+  // may outlast an entrance, so wall-clock sampling cannot observe its midpoint.
+  await page.route(url => url.pathname === '/', async route => {
+    const response = await route.fetch();
+    const style = '<style>.hero-horizon :is(.scene-credit,.hero-scroll,.scene-journey,.scene-toggle):not([data-test-playing]){animation-play-state:paused!important}</style>';
+    await route.fulfill({ response, body: (await response.text()).replace('<head>', `<head>${style}`) });
   });
+  const sampleEntrances = (selector: string) => page.locator(selector).evaluateAll(elements => elements.map(element => {
+    const animation = element.getAnimations().find(animation => animation instanceof CSSAnimation && animation.animationName === 'horizon-item-enter');
+    if (!animation) throw new Error(`${element.className} is missing its entrance`);
+    const timing = animation.effect!.getTiming();
+    animation.currentTime = Number(timing.delay) + Number(timing.duration) * .15;
+    const sample = { className: element.className, opacity: Number(getComputedStyle(element).opacity), transform: getComputedStyle(element).transform };
+    animation.currentTime = 0;
+    element.setAttribute('data-test-playing', '');
+    return sample;
+  }));
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   try {
+    const samples = await sampleEntrances('.scene-credit, .hero-scroll');
     await expect(page.locator('.hero-scroll')).toHaveCSS('opacity', '1');
     await expect(page.locator('[data-scene-journey]')).toBeHidden();
     const positions = () => page.evaluate(() => ['#home-title', '.hero-horizon', '.hero-scroll'].map(selector => {
@@ -189,6 +199,7 @@ test('bottom entrances are gradual and revealing 3D controls never shifts the te
     }));
     const before = await positions();
     release(); await sceneReady(page);
+    samples.push(...await sampleEntrances('.scene-journey, .scene-toggle'));
     await expect(page.locator('[data-scene-toggle]')).toHaveCSS('opacity', '1');
     expect(await positions()).toEqual(before);
     await page.setViewportSize({ width: 768, height: 1024 });
@@ -197,7 +208,6 @@ test('bottom entrances are gradual and revealing 3D controls never shifts the te
       return range.getBoundingClientRect().left - document.querySelector('[data-radio]')!.getBoundingClientRect().right;
     });
     expect(creditGap, 'Source text has breathing room beside the radio on tablet').toBeGreaterThanOrEqual(12);
-    const samples: { className: string; opacity: number; transform: string }[] = await page.evaluate(() => (window as any).__entrances);
     for (const className of ['scene-credit', 'hero-scroll', 'scene-journey', 'scene-toggle']) {
       const sample = samples.find(item => item.className === className);
       expect(sample, `${className} has its own entrance`).toBeDefined();

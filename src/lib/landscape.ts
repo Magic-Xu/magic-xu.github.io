@@ -5,7 +5,7 @@ import { LANDSCAPE_SESSION_KEY, type LandscapeState } from './landscape-state';
 import { createFlightRoute, worldPoint } from './landscape-route';
 import { createTextureLoader, type TexturePixels } from './landscape-textures';
 
-function prepareTerrain(data: TerrainData, height: Blob, small: boolean, signal: AbortSignal) {
+function prepareTerrain(data: TerrainData, height: Blob, divisions: number, signal: AbortSignal) {
   return new Promise<TerrainBuffers>((resolve, reject) => {
     const worker = new Worker(new URL('./landscape-terrain.worker.ts', import.meta.url), { type: 'module' });
     const clean = () => { worker.terminate(); signal.removeEventListener('abort', abort); };
@@ -16,7 +16,7 @@ function prepareTerrain(data: TerrainData, height: Blob, small: boolean, signal:
       clean(); result.error ? reject(new Error(result.error)) : resolve(result);
     };
     worker.onerror = event => { event.preventDefault(); clean(); reject(new Error('Terrain worker unavailable')); };
-    worker.postMessage({ data, height, divisions: small ? 384 : 768 });
+    worker.postMessage({ data, height, divisions });
   });
 }
 
@@ -266,7 +266,9 @@ export function createLandscape(host: HTMLElement) {
     loadTexture(small ? '/landscape/alpine-opening-mobile.webp' : '/landscape/alpine-opening.webp', true).catch(() => undefined)
   ]).then(async ([data, heightImage, photo, opening]) => {
     if (!alive) return;
-    const buffers = await prepareTerrain(data, heightImage, small, signal);
+    // Mesh density follows drawing-buffer size, including reduced-density displays.
+    const divisions = small || Math.max(width, height) * renderer.getPixelRatio() < 1024 ? 384 : 768;
+    const buffers = await prepareTerrain(data, heightImage, divisions, signal);
     if (!alive) return;
     // Let the compositor finish the opening text before GPU uploads/compilation.
     await Promise.allSettled(Array.from(hero.querySelectorAll('.hero-copy > *, .hero-horizon, .scene-credit, .hero-scroll')).flatMap(element => element.getAnimations().map(animation => animation.finished)));

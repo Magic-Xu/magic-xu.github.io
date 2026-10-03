@@ -12,7 +12,7 @@ export default defineConfig({
   use: {
     baseURL: process.env.TEST_BASE_URL || 'http://127.0.0.1:4330',
     channel: process.env.PLAYWRIGHT_CHANNEL || 'chromium',
-    deviceScaleFactor: process.env.CI ? .5 : 1,
+    deviceScaleFactor: process.env.CI ? .2 : 1,
     launchOptions: process.env.CI ? { args: ['--enable-unsafe-swiftshader'] } : undefined,
     viewport: { width: 1440, height: 960 },
     trace: 'retain-on-failure', screenshot: 'only-on-failure'
