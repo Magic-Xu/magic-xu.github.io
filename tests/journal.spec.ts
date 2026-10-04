@@ -1,5 +1,8 @@
 import { test, expect, fitsViewport } from './helpers';
 
+// These pages do not render WebGL; keep wheel input in CSS pixels for scroll assertions.
+test.use({ deviceScaleFactor: 1 });
+
 const journals = [
   { route: '/notes/', label: '随笔' },
   { route: '/footprints/', label: '足迹' }
