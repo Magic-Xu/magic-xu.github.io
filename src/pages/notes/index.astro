@@ -1,5 +1,6 @@
 ---
 import { render } from "astro:content";
+import { Image } from "astro:assets";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import JournalPreview from "../../components/JournalPreview.astro";
 import JournalEmpty from "../../components/JournalEmpty.astro";
@@ -14,9 +15,10 @@ for (const { entry } of notes) {
 }
 const years = [...new Set(entries.map(entry => journalYear(entry.data.date)))];
 const hasDemo = entries.some(entry => entry.data.demo);
+const hasDraft = entries.some(entry => entry.data.draft);
 ---
 
-<BaseLayout metaTitle="随笔" metaDescription="几句感悟，一点日常。小麦在野的短篇手记。" noIndex={hasDemo || !notes.length}>
+<BaseLayout metaTitle="随笔" metaDescription="几句感悟，一点日常。小麦在野的短篇手记。" noIndex={hasDemo || hasDraft || !notes.length}>
 	<section class="section notes-page">
 		<div class="container">
 			<header class="collection-heading" data-reveal-group>
@@ -37,11 +39,19 @@ const hasDemo = entries.some(entry => entry.data.demo);
 						<h2 id={`year-title-${year}`}>{year}<span>年</span></h2>
 						{notes.filter(({ entry }) => journalYear(entry.data.date) === year).map(({ entry, Content }) => <article class="note" id={`note-${entry.id}`} aria-label={`${journalDate(entry.data.date)} · ${entry.data.topic}随笔`}>
 							<div class="note-meta">
-								<a href={`#note-${entry.id}`} aria-label={`定位 ${journalDate(entry.data.date)} 的随笔`}><time datetime={journalDate(entry.data.date)}>{journalMonthDay(entry.data.date)}</time></a>
+								<a href={`#note-${entry.id}`} aria-label={`定位 ${entry.data.title || entry.data.topic} 的随笔`}><time datetime={entry.data.dateLabel ? undefined : journalDate(entry.data.date)}>{entry.data.dateLabel || journalMonthDay(entry.data.date)}</time></a>
 								<span>{entry.data.topic}</span>
 							</div>
 							<div class="note-body">
+								{entry.data.title && <h3 class="note-title"><a href={`#note-${entry.id}`}>{entry.data.title}</a></h3>}
 								<div class="note-copy"><Content /></div>
+								{entry.data.images.length > 0 && <div class:list={["note-images", entry.data.imageLayout === "comparison" && "note-images-pair"]}>
+									{entry.data.images.map(({ src, caption }) => <figure>
+										<a href={src.src} target="_blank" rel="noreferrer" aria-label={`查看大图：${caption}（新窗口）`}><Image src={src} alt={caption} widths={[480, 960, 1600]} sizes="(max-width: 760px) calc(100vw - 48px), 636px" loading="lazy" /></a>
+										<figcaption>{caption}</figcaption>
+									</figure>)}
+								</div>}
+								{entry.data.reference && <p class="note-reference"><a href={entry.data.reference.url} target="_blank" rel="noreferrer">{entry.data.reference.label} <span aria-hidden="true">↗</span></a></p>}
 								{entry.data.footprint && <a class="note-place" href={`/footprints/#footprint-${entry.data.footprint}`}>
 									<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15.5 8c0 4-5.5 9-5.5 9S4.5 12 4.5 8a5.5 5.5 0 1 1 11 0Z"/><circle cx="10" cy="8" r="1.8"/></svg>
 									{places.get(entry.data.footprint)}<Arrow />
@@ -72,6 +82,17 @@ const hasDemo = entries.some(entry => entry.data.demo);
 	.note-meta { display: flex; flex-direction: column; align-items: flex-start; padding-top: 5px; color: var(--color-muted); font: 12px/1.8 var(--font-sans); }
 	.note-meta a { display: inline-flex; min-height: 30px; font-size: 13px; font-variant-numeric: tabular-nums; }
 	.note-meta span { margin-top: 4px; }
+	.note-body { min-width: 0; }
+	.note-title { margin: 0 0 18px; font: 400 26px/1.65 var(--font-serif); text-wrap: pretty; }
+	.note-images { display: grid; gap: 22px; margin-top: 26px; }
+	.note-images figure { margin: 0; min-width: 0; }
+	.note-images a { display: block; }
+	.note-images img { display: block; width: 100%; height: auto; }
+	.note-images figcaption, .note-reference { margin: 9px 0 0; color: var(--color-muted); font: 11px/1.8 var(--font-sans); }
+	.note-images-pair { grid-template-columns: 1fr 1fr; gap: 16px; }
+	.note-images-pair img { aspect-ratio: 4 / 3; object-fit: cover; }
+	.note-reference { margin-top: 20px; }
+	.note-reference a { text-decoration: underline; text-underline-offset: 4px; }
 	.note-copy { font: 400 20px/2.05 var(--font-serif); overflow-wrap: anywhere; }
 	.note-copy :global(p) { margin: 0; }
 	.note-copy :global(p + p) { margin-top: 13px; }
@@ -88,6 +109,8 @@ const hasDemo = entries.some(entry => entry.data.demo);
 		.note { grid-template-columns: 72px minmax(0, 1fr); gap: 24px; }
 	}
 	@media (max-width: 760px) {
+		.note-title { font-size: 23px; }
+		.note-images-pair { grid-template-columns: 1fr; gap: 22px; }
 		.notes-layout { display: block; }
 		.notes-index { position: static; display: flex; align-items: center; justify-content: space-between; padding: 0; margin-bottom: 26px; }
 		.notes-count { margin: 0; }

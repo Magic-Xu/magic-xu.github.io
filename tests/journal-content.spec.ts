@@ -110,6 +110,14 @@ test('notes and travel memories remain usable without JavaScript', async ({ brow
     await page.locator('.site-nav a[href="/footprints/"]').click();
     await page.locator('[data-place="dali"]').click();
     const entry = page.locator('#footprint-dali');
+    // Let native anchor scrolling settle before Playwright tries to scroll and click again.
+    let previousTop = Number.NEGATIVE_INFINITY;
+    await expect.poll(async () => {
+      const top = (await entry.boundingBox())!.y;
+      const movement = Math.abs(top - previousTop);
+      previousTop = top;
+      return movement;
+    }, { intervals: [100, 200, 300] }).toBeLessThan(1);
     if (!(await entry.evaluate((element: HTMLDetailsElement) => element.open))) await entry.locator('summary').click();
     await expect(entry.locator('.trip-expanded')).toContainText('云走得很快');
     await expect(entry.locator('.trip-expanded')).toBeVisible();

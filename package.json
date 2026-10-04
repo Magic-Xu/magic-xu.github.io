@@ -7,6 +7,9 @@
   },
   "scripts": {
     "dev": "astro dev",
+    "dev:journal": "JOURNAL_PREVIEW=1 astro dev",
+    "build:journal-preview": "JOURNAL_PREVIEW=1 astro build",
+    "preview:journal": "JOURNAL_PREVIEW=1 astro preview",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",

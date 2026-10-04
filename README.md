@@ -45,7 +45,16 @@ npm test
 
 ### 随笔与足迹
 
-两个栏目目前没有公开记录，展示正式空状态：随笔引导阅读文章，足迹引导查看作品。空状态不展示年份、计数、地图或示例记录。向对应目录加入真实记录后，构建会自动显示列表与地图；`draft: true` 的记录不展示。随笔与足迹不进入文章 RSS。
+两个栏目已公开 3 则随笔、45 处足迹和 14 张照片；相册标题为「相机里的回忆」。随笔按时间倒序展示，足迹按地区归类，不进入文章 RSS。
+
+本地审稿使用独立构建与预览：
+
+```sh
+npm run build:journal-preview
+npm run preview:journal -- --host 127.0.0.1 --port 4323 --ignore-lock
+```
+
+草稿预览生成到 `.journal-preview-dist/`，不展示草稿状态横幅；包含草稿的页面设置 `noindex, nofollow`。修改时也可用 `npm run dev:journal -- --host 127.0.0.1 --port 4323 --ignore-lock`。普通 `npm run build` 仍生成 `dist/`，排除草稿正文和图片；不要将预览目录作为正式发布目录。正文在使用时才渲染，图片在 schema 校验前按草稿状态过滤，避免仅隐藏列表却导出素材。
 
 空栏目或含演示记录的页面设置 `noindex, nofollow`；有真实记录且不含演示内容时自动移除。真实记录不需要填写 `demo`，默认值为 `false`。测试样例放在 `tests/fixtures/journal/`，不进入常规构建；含样例的交互验证见 [测试说明](docs/testing.md)。
 
@@ -60,7 +69,7 @@ draft: true
 ---
 ```
 
-正文直接放几句感悟，不必填写标题、摘要或阅读时长。关联的足迹必须存在且不为草稿，否则构建报错，避免留下无效入口。
+正文直接放几句感悟，不要求摘要或阅读时长。可选 `title` 为短标题，`dateLabel` 用于月份或时间段，`images` 为 `{ src, caption }` 图片数组，`imageLayout: comparison` 在桌面并排展示对比图，`reference` 为 `{ label, url }` 来源链接。`date` 是排序依据；只能确定月份或事件阶段时，展示相应精度，不将产品发布日期当作作者的确切记录日期。关联的足迹必须在当前构建可见，否则构建报错，避免留下无效入口。
 
 足迹元数据示例（演示）：
 
@@ -76,9 +85,13 @@ draft: true
 ---
 ```
 
-正文保存旅途的片段，当前每个地点维护一份记录。以上示例保持草稿状态；填写真实内容后，将 `draft` 设为 `false` 即可展示。日期以 `YYYY-MM-DD` 维护，按 UTC 日历日期显示，不随访客时区偏移。
+正文保存旅途的片段，每个地点维护一份记录。`country` 默认为「中国」。`visitedAt`、经纬度和 `summary` 均可省略：未注明到访日期的地点按国内省市、海外国家展示，有坐标时同样进入地图，不虚构时间；有日期的记录仍进入原有时间线，经纬度完整且在底图范围内时标点。以上示例保持草稿状态；获得公开授权后，将相应 `draft` 设为 `false` 即可展示。日期以 `YYYY-MM-DD` 维护，按 UTC 日历日期显示，不随访客时区偏移。
 
-[`FootprintMap.astro`](src/components/FootprintMap.astro) 使用本地 SVG 海岸轮廓和经纬度定位，不请求在线地图服务。底图来自 [Natural Earth 1:110m Land](https://www.naturalearthdata.com/downloads/110m-physical-vectors/110m-land/)，按其[公共领域许可](https://www.naturalearthdata.com/about/terms-of-use/)投影为 `public/maps/east-asia-land.svg`。当前覆盖东经 96–126°、北纬 20–42°，不包含行政区边界；超出范围的记录仍出现在列表，但不在图上标点。拓展地域时一起更新底图与 [`journal.ts`](src/lib/journal.ts) 的 `mapExtent`，勿将越界地点挤到图边。
+`src/content/footprint-albums/` 保存相册 JSON，包含 `title`、`draft` 和 `photos`（每张的 `src`、`caption`）。相册不保存或展示拍摄日期，无法确认拍摄地点时只描述画面。图片保存在 `src/assets/journal/`，网站副本去除 EXIF，生成响应式尺寸；保留既有脱敏和 AI 图片标注，点击可查看大图。随笔与照片的来源和时间口径保存在本机 `MagicPersonalIP/Blog/footprints/travel-memories/sources.md`。
+
+[`FootprintMap.astro`](src/components/FootprintMap.astro) 使用本地 SVG 海岸轮廓和经纬度定位，不请求在线地图服务。底图来自 [Natural Earth 1:110m Land](https://www.naturalearthdata.com/downloads/110m-physical-vectors/110m-land/)，按其[公共领域许可](https://www.naturalearthdata.com/about/terms-of-use/)投影为 `public/maps/east-asia-land.svg`。当前覆盖东经 96–126°、北纬 20–42°，不包含行政区边界；超出范围的记录仍出现在列表，但不在图上标点。拓展有日期的记录时一起更新底图与 [`journal.ts`](src/lib/journal.ts) 的 `mapExtent`，勿将越界地点挤到图边。
+
+无日期的地点目录使用 [`FootprintAtlas.astro`](src/components/FootprintAtlas.astro) 与 [`footprint-atlas.ts`](src/scripts/footprint-atlas.ts)，沿用原有地图风格，按华夏、日本、东南亚、澳大利亚切换范围。支持按住拖动、双指缩放及加减/全览按钮；普通滚轮滚动页面，触控板捏合缩放地图；地图获得焦点后可用方向键、加减键和 Home 操作。密集点位聚合后可点开放大，地点目录与地图双向定位。桌面地图与地点目录联动滚动：右侧滚动先推动页面，区块到达导航下方后停靠并滚动地点列表，到顶或到底后将剩余滚动交还页面；反向滚动按相反顺序衔接。分组标题吸顶于列表内部，左侧始终保留整页滚动。两侧互选只更新地图或滚动目录，不移动整页。手机按页面顺序阅读与定位。底图为本地 `asia-pacific-land.svg`（Natural Earth 1:10m Land，简化精度 0.015°）；城市与地区点位依据 GeoNames；具体来源保存在同一份本地稿件来源记录中。`locality` 可保留具体景点或区县小注，`locationType: region` 标记州、盟等地区参考点。
 
 [`footprints.ts`](src/scripts/footprints.ts) 处理地图选中、锚点定位和连续展开收起；无 JavaScript 时仍可用原生链接与 `details/summary` 阅读。主导航为「文章 / 作品 / 足迹 / 随笔 / 关于」，≤600px 时品牌与导航分成两行。
 

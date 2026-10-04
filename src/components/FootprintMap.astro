@@ -3,7 +3,8 @@ import type { CollectionEntry } from "astro:content";
 import { projectPlace } from "../lib/journal";
 interface Props { places: CollectionEntry<"footprints">[]; }
 const { places } = Astro.props;
-const markers = places.map(entry => ({ entry, ...projectPlace(entry.data.longitude, entry.data.latitude) }))
+const markers = places.filter(entry => entry.data.longitude !== undefined && entry.data.latitude !== undefined)
+	.map(entry => ({ entry, ...projectPlace(entry.data.longitude!, entry.data.latitude!) }))
 	.filter(({ x, y }) => x >= 0 && x <= 100 && y >= 0 && y <= 100);
 ---
 
@@ -22,7 +23,7 @@ const markers = places.map(entry => ({ entry, ...projectPlace(entry.data.longitu
 			<span class="map-dot" aria-hidden="true"></span><span class="map-label">{entry.data.place}</span>
 		</a>)}
 	</div>
-	<figcaption><span>点一个地名，翻开那段记忆。</span><a href="https://www.naturalearthdata.com/about/terms-of-use/" target="_blank" rel="noreferrer">底图 Natural Earth <span class="visually-hidden">（新窗口）</span></a></figcaption>
+	<figcaption><a href="https://www.naturalearthdata.com/about/terms-of-use/" target="_blank" rel="noreferrer">Natural Earth <span class="visually-hidden">（新窗口）</span></a></figcaption>
 </figure>
 
 <style>
@@ -39,7 +40,7 @@ const markers = places.map(entry => ({ entry, ...projectPlace(entry.data.longitu
 	.map-place:hover .map-dot, .map-place[aria-current] .map-dot { background: var(--color-accent); box-shadow: 0 0 0 6px #455d3514; transform: scale(1.15); }
 	.map-place[aria-current] .map-label { color: var(--color-accent); text-decoration: underline; text-underline-offset: 5px; }
 	.map-place:focus-visible { outline: 1px solid var(--color-accent); outline-offset: 1px; }
-	figcaption { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 15px; margin-top: 16px; color: var(--color-muted); font: 11px/1.8 var(--font-sans); }
+	figcaption { display: flex; justify-content: flex-end; margin-top: 16px; color: var(--color-muted); font: 11px/1.8 var(--font-sans); }
 	figcaption a { font-size: 10px; text-decoration: underline; text-underline-offset: 3px; }
 	@media (max-width: 760px) { .map-heading { margin-bottom: 17px; } .map-label { font-size: 12px; } }
 	@media (prefers-reduced-motion: reduce) { .map-dot, .map-label { transition: none; } }
