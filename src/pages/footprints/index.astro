@@ -4,16 +4,22 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import JournalPreview from "../../components/JournalPreview.astro";
 import JournalEmpty from "../../components/JournalEmpty.astro";
 import FootprintMap from "../../components/FootprintMap.astro";
+import FootprintDirectory from "../../components/FootprintDirectory.astro";
 import Arrow from "../../components/Arrow.astro";
-import { getFootprints, journalYear, journalDate, journalMonthDay } from "../../lib/journal";
+import { getFootprints, getFootprintAlbums, journalYear, journalDate, journalMonthDay } from "../../lib/journal";
 
-const entries = await getFootprints();
+const allEntries = await getFootprints();
+const entries = allEntries.filter(entry => entry.data.visitedAt);
+const undated = allEntries.filter(entry => !entry.data.visitedAt);
+const albums = await getFootprintAlbums();
 const trips = await Promise.all(entries.map(async entry => ({ entry, ...await render(entry) })));
-const years = [...new Set(entries.map(entry => journalYear(entry.data.visitedAt)))];
-const hasDemo = entries.some(entry => entry.data.demo);
+const years = [...new Set(entries.map(entry => journalYear(entry.data.visitedAt!)))];
+const hasDemo = allEntries.some(entry => entry.data.demo);
+const hasDraft = allEntries.some(entry => entry.data.draft) || albums.some(entry => entry.data.draft);
+const hasDirectory = undated.length > 0 || albums.length > 0;
 ---
 
-<BaseLayout metaTitle="足迹" metaDescription="走过的地方，沿途的记忆。小麦在野的旅行手记。" noIndex={hasDemo || !trips.length}>
+<BaseLayout metaTitle="足迹" metaDescription="走过的地方，沿途的记忆。小麦在野的旅行手记。" noIndex={hasDemo || hasDraft || (!trips.length && !hasDirectory)}>
 	<section class="section footprints-page" data-footprints>
 		<div class="container">
 			<header class="collection-heading" data-reveal-group>
@@ -21,15 +27,16 @@ const hasDemo = entries.some(entry => entry.data.demo);
 				<p>收集沿途的风景，<br />也留一点当时的心情。</p>
 			</header>
 			{hasDemo && <JournalPreview kind="足迹" />}
+			{hasDirectory && <FootprintDirectory places={undated} albums={albums} />}
 			{trips.length ? <div class="footprints-layout">
 				<aside class="footprints-atlas"><FootprintMap places={entries} /></aside>
 				<div class="footprints-journal">
 					<p class="footprints-count">{new Set(entries.map(entry => entry.data.place)).size} 个地点<span>·</span>{trips.length} 段记忆</p>
 					{years.map(year => <section class="trip-year" aria-labelledby={`trip-year-${year}`}>
 						<h2 id={`trip-year-${year}`}>{year}<span>年</span></h2>
-						{trips.filter(({ entry }) => journalYear(entry.data.visitedAt) === year).map(({ entry, Content }) => <details class="trip-entry" id={`footprint-${entry.id}`} data-trip={entry.id} open={entry === entries[0]}>
+						{trips.filter(({ entry }) => journalYear(entry.data.visitedAt!) === year).map(({ entry, Content }) => <details class="trip-entry" id={`footprint-${entry.id}`} data-trip={entry.id} open={entry === entries[0]}>
 							<summary>
-								<span class="trip-date"><time datetime={journalDate(entry.data.visitedAt)}>{journalMonthDay(entry.data.visitedAt)}</time></span>
+								<span class="trip-date"><time datetime={journalDate(entry.data.visitedAt!)}>{journalMonthDay(entry.data.visitedAt!)}</time></span>
 								<span class="trip-title"><span class="trip-place">{entry.data.place}{entry.data.region !== entry.data.place && <span class="trip-region">{entry.data.region}</span>}</span><span class="trip-description">{entry.data.summary}</span></span>
 								<span class="trip-arrow" aria-hidden="true"><Arrow direction="up-right" /></span>
 							</summary>
@@ -38,7 +45,7 @@ const hasDemo = entries.some(entry => entry.data.demo);
 					</section>)}
 					<div class="footprints-colophon"><p>还有很多地方，慢慢去。</p><a class="text-link" href="/notes/">读一则随笔 <Arrow /></a></div>
 				</div>
-			</div> : <JournalEmpty kind="footprints" />}
+			</div> : !hasDirectory && <JournalEmpty kind="footprints" />}
 		</div>
 	</section>
 </BaseLayout>

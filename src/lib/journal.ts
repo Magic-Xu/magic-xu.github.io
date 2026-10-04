@@ -1,10 +1,14 @@
 import { getCollection } from "astro:content";
 
-export const getNotes = async () => (await getCollection("notes", ({ data }) => !data.draft))
+export const journalPreview = process.env.JOURNAL_PREVIEW === "1" && process.env.JOURNAL_TEST_DATA !== "1";
+
+export const getNotes = async () => (await getCollection("notes", ({ data }) => journalPreview || !data.draft))
 	.sort((a, b) => b.data.date.getTime() - a.data.date.getTime() || a.id.localeCompare(b.id));
 
-export const getFootprints = async () => (await getCollection("footprints", ({ data }) => !data.draft))
-	.sort((a, b) => b.data.visitedAt.getTime() - a.data.visitedAt.getTime() || a.id.localeCompare(b.id));
+export const getFootprints = async () => (await getCollection("footprints", ({ data }) => journalPreview || !data.draft))
+	.sort((a, b) => (b.data.visitedAt?.getTime() ?? 0) - (a.data.visitedAt?.getTime() ?? 0) || a.id.localeCompare(b.id));
+
+export const getFootprintAlbums = async () => getCollection("footprintAlbums", ({ data }) => journalPreview || !data.draft);
 
 export const journalYear = (date: Date) => date.getUTCFullYear();
 export const journalDate = (date: Date) => date.toISOString().slice(0, 10);

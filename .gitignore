@@ -1,6 +1,7 @@
 # build output
 dist/
 .journal-test-dist/
+.journal-preview-dist/
 # generated types
 .astro/
 

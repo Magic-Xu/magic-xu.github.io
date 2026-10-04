@@ -1,0 +1,138 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { Image } from "astro:assets";
+import Arrow from "./Arrow.astro";
+import FootprintAtlas from "./FootprintAtlas.astro";
+
+interface Props {
+	places: CollectionEntry<"footprints">[];
+	albums: CollectionEntry<"footprintAlbums">[];
+}
+const { places, albums } = Astro.props;
+const domestic = places.filter(entry => entry.data.country === "中国");
+const overseas = places.filter(entry => entry.data.country !== "中国");
+const regionOrder = ["广东", "香港", "澳门", "江西", "浙江", "江苏", "上海", "山东", "河北", "北京", "内蒙古", "辽宁", "吉林", "黑龙江", "四川", "重庆", "云南"];
+const regions = [...new Set(domestic.map(entry => entry.data.region))].sort((a, b) => {
+	const rank = (region: string) => regionOrder.includes(region) ? regionOrder.indexOf(region) : regionOrder.length;
+	return rank(a) - rank(b) || a.localeCompare(b, "zh-CN");
+});
+const countryOrder = ["日本", "泰国", "越南", "马来西亚", "澳大利亚"];
+const countries = [...new Set(overseas.map(entry => entry.data.country))].sort((a, b) => {
+	const rank = (country: string) => countryOrder.includes(country) ? countryOrder.indexOf(country) : countryOrder.length;
+	return rank(a) - rank(b) || a.localeCompare(b, "zh-CN");
+});
+const photos = albums.flatMap(album => album.data.photos);
+const home = places.find(entry => entry.id === "shenzhen" && entry.data.summary);
+---
+
+<div class="travel-directory">
+	<div class="travel-explorer">
+		<aside class="travel-margin">
+			<div class="travel-index">
+				<FootprintAtlas places={places} />
+				<p>{places.length} 处足迹{photos.length > 0 && <span class="photo-count">{photos.length} 张照片</span>}</p>
+				<nav aria-label="足迹分类">
+					{domestic.length > 0 && <a href="#places-china">从华夏 <Arrow /></a>}
+					{overseas.length > 0 && <a href="#places-overseas">到远方 <Arrow /></a>}
+					{photos.length > 0 && <a href="#travel-photos">相机里的回忆 <Arrow /></a>}
+				</nav>
+				{home && <p class="travel-home"><span>{home.data.place}</span>{home.data.summary}。</p>}
+			</div>
+		</aside>
+		<div class="travel-content" data-place-list tabindex="0" role="region" aria-label="足迹地点">
+			<div class="travel-places">
+				{domestic.length > 0 && <section id="places-china" class="place-section" aria-labelledby="china-title">
+					<h2 id="china-title">从华夏<span>{domestic.length} 处</span></h2>
+					<dl>{regions.map(region => <div class="place-region">
+						<dt>{region}</dt>
+						<dd>{domestic.filter(entry => entry.data.region === region).sort((a, b) => a.data.place.localeCompare(b.data.place, "zh-CN")).map(entry => <a class="place-name" id={`footprint-${entry.id}`} href="#travel-map" data-map-link={entry.id} aria-label={`在地图上查看${entry.data.place}${entry.data.locality ? `（${entry.data.locality}）` : ""}`}>{entry.data.place}{entry.data.locality && <small>{entry.data.locality}</small>}</a>)}</dd>
+					</div>)}</dl>
+				</section>}
+				{overseas.length > 0 && <section id="places-overseas" class="place-section" aria-labelledby="overseas-title">
+					<h2 id="overseas-title">到远方<span>{overseas.length} 处</span></h2>
+					<dl>{countries.map(country => <div class="place-region">
+						<dt>{country}</dt>
+						<dd>{overseas.filter(entry => entry.data.country === country).sort((a, b) => a.data.place.localeCompare(b.data.place, "zh-CN")).map(entry => <a class="place-name" id={`footprint-${entry.id}`} href="#travel-map" data-map-link={entry.id} aria-label={`在地图上查看${entry.data.place}${entry.data.locality ? `（${entry.data.locality}）` : ""}`}>{entry.data.place}{entry.data.locality && <small>{entry.data.locality}</small>}</a>)}</dd>
+					</div>)}</dl>
+				</section>}
+			</div>
+		</div>
+	</div>
+	{photos.length > 0 && <section class="travel-photos" id="travel-photos" aria-labelledby="photos-title">
+		<div class="photos-heading"><h2 id="photos-title">相机里的回忆</h2><p>走过的路，留下的片段。</p></div>
+		<div class="photo-gallery">{photos.map(photo => <figure>
+			<a href={photo.src.src} target="_blank" rel="noreferrer" aria-label={`查看大图：${photo.caption}（新窗口）`}>
+				<Image src={photo.src} alt={photo.caption} widths={[480, 960, 1600]} sizes="(max-width: 760px) calc(100vw - 48px), (max-width: 1440px) 44vw, 635px" loading="lazy" />
+			</a>
+			<figcaption><span>{photo.caption}</span></figcaption>
+		</figure>)}</div>
+	</section>}
+	<div class="travel-colophon"><p>还有很多地方，慢慢去。</p><a class="text-link" href="/notes/">读一则随笔 <Arrow /></a></div>
+</div>
+
+<style>
+	.travel-explorer { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 0 clamp(36px, 5vw, 76px); align-items: start; }
+	.travel-index { padding-top: 8px; }
+	.travel-index > p { margin: 28px 0 12px; font: 12px/2 var(--font-sans); color: var(--color-muted); }
+	.photo-count { display: inline; }
+	.photo-count::before { content: " · "; }
+	.travel-index nav { display: flex; flex-wrap: wrap; gap: 4px 24px; }
+	.travel-index nav a { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: fit-content; min-height: 44px; font: 14px/1.7 var(--font-serif); }
+	.travel-index :global(.arrow-icon) { width: 16px; height: 16px; opacity: .6; }
+	.travel-home { margin-top: 18px; max-width: none; color: var(--color-muted); font: 12px/2 var(--font-sans); }
+	.travel-home span { display: inline; margin-right: 12px; color: var(--color-text); font: 19px/1.5 var(--font-serif); }
+	.travel-content { position: relative; isolation: isolate; min-width: 0; height: var(--places-height, min(640px, 100dvh - 160px)); overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--color-line-strong) transparent; padding-inline: 3px 14px; scroll-padding-top: 88px; background: var(--color-paper); }
+	.travel-content:focus-visible { outline: 1px solid var(--color-accent); outline-offset: 5px; }
+	.travel-places { display: grid; grid-template-columns: 1fr; gap: 46px; }
+	.place-section:last-child { min-height: var(--places-height, min(640px, 100dvh - 160px)); }
+	.place-section, .travel-photos, .place-name { scroll-margin-top: 140px; }
+	.place-section h2, .photos-heading h2 { margin: 0; font: 400 32px/1.5 var(--font-serif); }
+	.place-section h2 { position: sticky; top: 0; z-index: 2; display: flex; align-items: baseline; justify-content: space-between; gap: 18px; padding-bottom: 23px; border-bottom: 1px solid var(--color-line-strong); background: var(--color-paper); }
+	.place-section h2 span { color: var(--color-muted); font: 12px/1.8 var(--font-sans); }
+	dl { margin: 0; }
+	.place-region { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 20px; padding-block: 12px; border-bottom: 1px solid var(--color-line); }
+	dt { padding-top: 3px; color: var(--color-muted); font: 12px/2 var(--font-sans); }
+	dd { display: flex; flex-wrap: wrap; gap: 0 19px; margin: 0; font: 17px/1.9 var(--font-serif); }
+	.place-name { display: inline-flex; gap: 5px; align-items: baseline; min-height: 44px; padding-block: 4px; }
+	.place-name small { color: var(--color-muted); font: 11px/1.8 var(--font-sans); }
+	.place-name:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+	.place-name:target, .place-name[aria-current] { text-decoration: underline; text-underline-offset: 6px; color: var(--color-accent); }
+	.travel-photos { margin-top: 88px; }
+	.photos-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; margin-bottom: 30px; padding-bottom: 23px; border-bottom: 1px solid var(--color-line-strong); }
+	.photos-heading p { margin: 0; color: var(--color-muted); font: 12px/1.8 var(--font-sans); }
+	.photo-gallery { columns: 2; column-gap: 28px; }
+	.photo-gallery figure { break-inside: avoid; margin: 0 0 30px; }
+	.photo-gallery a, .photo-gallery img { display: block; width: 100%; height: auto; }
+	.photo-gallery a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 5px; }
+	figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; margin-top: 10px; color: var(--color-muted); font: 11px/1.8 var(--font-sans); }
+	.travel-colophon { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 35px; padding-top: 25px; border-top: 1px solid var(--color-line); color: var(--color-muted); font-size: 12px; }
+	.travel-colophon p { margin: 0; }
+	.travel-colophon a { font-size: 12px; }
+	@media (max-width: 1100px) {
+		.travel-explorer { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 0 34px; }
+		.travel-places { grid-template-columns: 1fr; gap: 46px; }
+		.place-region { grid-template-columns: 78px minmax(0, 1fr); }
+	}
+	@media (max-width: 760px) {
+		.travel-explorer { grid-template-columns: 1fr; gap: 36px; }
+		.travel-content { position: static; height: auto; overflow: visible; padding: 0; scroll-padding: 0; }
+		.place-section:last-child { min-height: 0; }
+		.place-section h2 { position: static; }
+		.travel-index { padding: 0; }
+		.travel-index > p { margin-bottom: 12px; }
+		.photo-count { display: inline; }
+		.photo-count::before { content: " · "; }
+		.travel-index nav { display: flex; flex-wrap: wrap; gap: 4px 24px; }
+		.travel-index nav a { gap: 10px; font-size: 15px; }
+		.travel-home { margin: 20px 0 0; max-width: none; }
+		.travel-home span { display: inline; margin-right: 12px; font-size: 19px; }
+		.place-section h2, .photos-heading h2 { font-size: 28px; }
+		.travel-places { gap: 42px; }
+		.place-region { gap: 14px; padding-block: 18px; }
+		.travel-photos { margin-top: 56px; }
+		.photos-heading { display: block; margin-bottom: 24px; }
+		.photos-heading p { margin-top: 8px; }
+		.photo-gallery { columns: 1; }
+		.travel-colophon { flex-direction: column; align-items: flex-start; gap: 8px; }
+	}
+</style>
