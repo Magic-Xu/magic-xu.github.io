@@ -33,6 +33,10 @@ npm test
 
 ## 内容维护
 
+文章、足迹和随笔的权威母稿统一在飞书「个人创作」知识库维护；网站内 Markdown 是经确认同步的展示副本。同步前从本机 MagicPersonalIP/Blog 的 `content-index.json` 与对应条目的 `publication.json` 定位母稿及上次版本。正文先修改飞书，网站同步保留原日期、稳定文件名和已确认的草稿状态。
+
+渠道稿、原始素材、封面、预览及发布记录统一放在 MagicPersonalIP/Blog 的 `articles/`、`footprints/`、`notes/` 下，仅在本机保存；网站仓库仅保留页面需要的内容和公开资源。创作统一使用 `magic-creation` Skill，新内容默认保存在飞书对应草稿分类；网站同步按本人指令执行。随笔另可按明确指令发布到本人指定的 X 账号，各渠道状态分别记录。详细操作说明见[飞书创作首页](https://pids76enhp8.feishu.cn/wiki/EQ8swyX2zixcJIkd768czYPQn3g)，随笔与足迹沿用下方各自的内容模型。
+
 - `src/content/blog/`：Markdown 文章；`draft: true` 的文章不会出现在列表、详情或 RSS 中。
 - `src/content/notes/`：短篇随笔，在 `/notes/` 按年份、日期倒序直接展示全文。
 - `src/content/footprints/`：旅行记录，在 `/footprints/` 按时间分组；地点图可定位并展开对应记录。
