@@ -21,6 +21,22 @@ test('Chinese reading headings update the active table of contents and progress'
   expect(await page.locator('.reading-progress').evaluate(e => new DOMMatrix(getComputedStyle(e).transform).a)).toBeGreaterThan(0);
 });
 
+test('article screenshots reserve their ratio before decoding on a phone', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/writing/google-play-one-time-purchase-testing/');
+  const image = page.locator('.article-prose img').first();
+  const reserved = await image.evaluate(el => {
+    const box = el.getBoundingClientRect();
+    return { width: box.width, height: box.height, attrW: el.getAttribute('width'), attrH: el.getAttribute('height'), src: el.getAttribute('src') };
+  });
+  expect(reserved.src).toMatch(/\.webp$/);
+  expect(Number(reserved.attrW)).toBeGreaterThan(0);
+  expect(Number(reserved.attrH)).toBeGreaterThan(0);
+  expect(reserved.width).toBeGreaterThan(200);
+  expect(reserved.height).toBeGreaterThan(80);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
 test('source credit opens UTF-8 HTML, fits narrow screens and returns home', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/'); await page.locator('.scene-credit').click();

@@ -34,7 +34,7 @@ Testers Community 可以通过互测换积分。帮别人测试 App，赚到积�
 发布到互测广场前，先在应用资料页填好应用名称、开发者名称和 Google Play 链接。测试说明用于告诉别人怎么参与、要测什么。
 
 <figure style="margin: 1.5rem 0;">
-  <a href="/images/blog/google-play-closed-testing/testers-community-instructions.png" target="_blank" rel="noopener" aria-label="截图"><img src="/images/blog/google-play-closed-testing/testers-community-instructions.png" alt="互测平台的应用资料与测试说明，应用图标、名称、开发者姓名和链接已遮盖" width="380" loading="lazy" /></a>
+  <a href="/images/blog/google-play-closed-testing/testers-community-instructions.webp" target="_blank" rel="noopener" aria-label="截图"><img src="/images/blog/google-play-closed-testing/testers-community-instructions.webp" alt="互测平台的应用资料与测试说明，应用图标、名称、开发者姓名和链接已遮盖" width="1080" loading="lazy" height="2162" /></a>
   <figcaption style="font-size: 0.85em; line-height: 1.7; color: var(--color-text-soft); margin-top: 0.6em;">发布到互测广场前填写的应用资料，身份信息已打码。</figcaption>
 </figure>
 
@@ -43,7 +43,7 @@ Testers Community 可以通过互测换积分。帮别人测试 App，赚到积�
 资料填好后，就可以用积分把 App 挂到互测广场。
 
 <figure style="margin: 1.5rem 0;">
-  <a href="/images/blog/google-play-closed-testing/testers-community-marketplace.png" target="_blank" rel="noopener" aria-label="截图"><img src="/images/blog/google-play-closed-testing/testers-community-marketplace.png" alt="Testers Community 互测广场，展示应用列表、积分奖励和添加自己应用的入口" width="340" loading="lazy" /></a>
+  <a href="/images/blog/google-play-closed-testing/testers-community-marketplace.webp" target="_blank" rel="noopener" aria-label="截图"><img src="/images/blog/google-play-closed-testing/testers-community-marketplace.webp" alt="Testers Community 互测广场，展示应用列表、积分奖励和添加自己应用的入口" width="1080" loading="lazy" height="2162" /></a>
   <figcaption style="font-size: 0.85em; line-height: 1.7; color: var(--color-text-soft); margin-top: 0.6em;">Testers Community 的互测广场。</figcaption>
 </figure>
 
@@ -67,7 +67,7 @@ Testers Community 可以通过互测换积分。帮别人测试 App，赚到积�
 4. 填写接收反馈的邮箱，保存更改。封闭测试版本发布后，把页面下方的参与测试链接发给卖家。
 
 <figure style="margin: 1.5rem 0;">
-  <a href="/images/blog/google-play-closed-testing/play-closed-testing-testers.png" target="_blank" rel="noopener" aria-label="测试人员名单配置截图"><img src="/images/blog/google-play-closed-testing/play-closed-testing-testers.png" alt="Alpha 轨道测试人员配置：电子邮件收件人列表已选中，下方有 Android 和网页参与测试链接；列表名称、人数和反馈邮箱已遮盖" width="760" loading="lazy" /></a>
+  <a href="/images/blog/google-play-closed-testing/play-closed-testing-testers.webp" target="_blank" rel="noopener" aria-label="测试人员名单配置截图"><img src="/images/blog/google-play-closed-testing/play-closed-testing-testers.webp" alt="Alpha 轨道测试人员配置：电子邮件收件人列表已选中，下方有 Android 和网页参与测试链接；列表名称、人数和反馈邮箱已遮盖" width="2366" loading="lazy" height="1638" /></a>
   <figcaption style="font-size: 0.85em; line-height: 1.7; color: var(--color-text-soft); margin-top: 0.6em;">测试人员名单配置与参与测试链接。</figcaption>
 </figure>
 
@@ -76,7 +76,7 @@ Testers Community 可以通过互测换积分。帮别人测试 App，赚到积�
 后台还保留着这次使用的 Alpha 封闭测试轨道，目前已经暂停。
 
 <figure style="margin: 1.5rem 0;">
-  <a href="/images/blog/google-play-closed-testing/play-closed-testing-paused-track.png" target="_blank" rel="noopener" aria-label="截图"><img src="/images/blog/google-play-closed-testing/play-closed-testing-paused-track.png" alt="Play Console 已暂停的 Alpha 封闭测试轨道，应用身份信息及个人操作日期已遮盖" width="760" loading="lazy" /></a>
+  <a href="/images/blog/google-play-closed-testing/play-closed-testing-paused-track.webp" target="_blank" rel="noopener" aria-label="截图"><img src="/images/blog/google-play-closed-testing/play-closed-testing-paused-track.webp" alt="Play Console 已暂停的 Alpha 封闭测试轨道，应用身份信息及个人操作日期已遮盖" width="1539" loading="lazy" height="768" /></a>
   <figcaption style="font-size: 0.85em; line-height: 1.7; color: var(--color-text-soft); margin-top: 0.6em;">已暂停的 Alpha 封闭测试轨道。</figcaption>
 </figure>
 
@@ -89,7 +89,7 @@ Testers Community 可以通过互测换积分。帮别人测试 App，赚到积�
 这次申请一次就通过了，下面是 Google Play 发来的获批邮件。
 
 <figure style="margin: 1.5rem 0;">
-  <a href="/images/blog/google-play-closed-testing/play-production-access-approved.png" target="_blank" rel="noopener" aria-label="获批邮件截图"><img src="/images/blog/google-play-closed-testing/play-production-access-approved.png" alt="Google Play 正式版发布权限获批邮件，应用身份信息已遮盖，个人账号和日期已裁去" width="760" loading="lazy" /></a>
+  <a href="/images/blog/google-play-closed-testing/play-production-access-approved.webp" target="_blank" rel="noopener" aria-label="获批邮件截图"><img src="/images/blog/google-play-closed-testing/play-production-access-approved.webp" alt="Google Play 正式版发布权限获批邮件，应用身份信息已遮盖，个人账号和日期已裁去" width="605" loading="lazy" height="328" /></a>
   <figcaption style="font-size: 0.85em; line-height: 1.7; color: var(--color-text-soft); margin-top: 0.6em;">Google Play 正式版发布权限获批邮件。</figcaption>
 </figure>
 

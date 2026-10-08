@@ -54,7 +54,7 @@ Google Play 的 Billing SDK 已经提供了商品与价格查询、购买支付�
 
 等安装包处理完成后，打开 **借助 Play 变现 → 商品 → 一次性商品 → 创建一次性商品**。
 
-<img src="/images/blog/google-play-one-time-purchase-testing/console-product-form.png" alt="一次性商品创建页面" width="500" loading="lazy" />
+<img src="/images/blog/google-play-one-time-purchase-testing/console-product-form.webp" alt="一次性商品创建页面" width="930" loading="lazy" height="714" />
 
 这里主要填写商品 ID、名称和说明。商品 ID 要与 App 查询时使用的 ID 一致，创建后不能再修改。
 
@@ -70,7 +70,7 @@ Google Play 的 Billing SDK 已经提供了商品与价格查询、购买支付�
 
 打开商品的 **购买选项和优惠**，选择对应选项，再进入 **供应情况和定价**。这里能查到各地区的价格。下面这条泰国记录显示 THB 150.00，供应状态为“供应”。
 
-<img src="/images/blog/google-play-one-time-purchase-testing/console-region-price.png" alt="泰国地区的价格和供应状态" width="560" loading="lazy" />
+<img src="/images/blog/google-play-one-time-purchase-testing/console-region-price.webp" alt="泰国地区的价格和供应状态" width="1040" loading="lazy" height="170" />
 
 最后确认商品和购买选项都已启用，测试账号所在地区可以购买。App 要展示 Google Play 返回的当地价格，不能把“3.99 美元”写死在按钮里。
 
@@ -90,11 +90,11 @@ Google Play 的 Billing SDK 已经提供了商品与价格查询、购买支付�
 
 在手机上用同一个 Google 账号打开链接，加入测试。页面会提供 Google Play 的安装入口，从这里安装测试版。
 
-<img src="/images/blog/google-play-one-time-purchase-testing/console-internal-test.png" alt="内部测试名单和参与测试链接" width="560" loading="lazy" />
+<img src="/images/blog/google-play-one-time-purchase-testing/console-internal-test.webp" alt="内部测试名单和参与测试链接" width="1635" loading="lazy" height="962" />
 
 接着配置许可测试名单。回到 Play Console 的“所有应用”，打开开发者账号的 **设置 → 许可测试**。选择包含这个 Google 账号的电子邮件列表，许可响应保留 `RESPOND_NORMALLY`，然后保存。
 
-<img src="/images/blog/google-play-one-time-purchase-testing/console-license-test.png" alt="许可测试名单和许可响应设置" width="560" loading="lazy" />
+<img src="/images/blog/google-play-one-time-purchase-testing/console-license-test.webp" alt="许可测试名单和许可响应设置" width="1517" loading="lazy" height="1037" />
 
 只加入内部测试名单，购买时仍可能真的扣钱。是否已经开通测试付款，要看手机上的 Google Play 付款面板。面板里应出现测试卡，并提示这笔订单不会收费。
 
@@ -102,11 +102,11 @@ Google Play 的 Billing SDK 已经提供了商品与价格查询、购买支付�
 
 打开测试版 App 的购买页面，查看价格是否加载出来，再和后台对应地区的定价比较。这次泰国账号显示的是 THB 150.00。
 
-<img src="/images/blog/google-play-one-time-purchase-testing/localized-price.jpg" alt="App 显示的泰铢价格" width="300" loading="lazy" />
+<img src="/images/blog/google-play-one-time-purchase-testing/localized-price.webp" alt="App 显示的泰铢价格" width="860" loading="lazy" height="1920" />
 
 如果价格一直在加载，可以先看后面的“常见问题”。价格正常后，点击购买。确认 Google Play 付款面板显示 **“测试卡，一律批准”** 和不收费的提示，再完成这笔测试购买。
 
-<img src="/images/blog/google-play-one-time-purchase-testing/test-purchase.jpg" alt="Google Play 测试购买面板" width="300" loading="lazy" />
+<img src="/images/blog/google-play-one-time-purchase-testing/test-purchase.webp" alt="Google Play 测试购买面板" width="860" loading="lazy" height="1920" />
 
 ### 权益检查
 
@@ -117,7 +117,7 @@ Google Play 的 Billing SDK 已经提供了商品与价格查询、购买支付�
 - **水印**：处理一张图片并导出，打开保存的图片，检查品牌水印是否已经移除。
 - **重启后的状态**：强制停止 App，再打开，检查 Pro 状态和上述功能是否保留。
 
-<img src="/images/blog/google-play-one-time-purchase-testing/pro-unlocked.jpg" alt="购买后的 Pro 状态" width="300" loading="lazy" />
+<img src="/images/blog/google-play-one-time-purchase-testing/pro-unlocked.webp" alt="购买后的 Pro 状态" width="860" loading="lazy" height="1920" />
 
 不要只看页面上的“已购买”。付费功能是否生效，要实际用一次才能确认。
 
@@ -127,7 +127,7 @@ Google Play 的 Billing SDK 已经提供了商品与价格查询、购买支付�
 
 核对商品 ID、购买选项、币种和金额。这次的金额是 THB 150.00，还要确认订单时间与测试时间对应。如果后台标注的是“世界协调时间”，需要换算后再比较。
 
-<img src="/images/blog/google-play-one-time-purchase-testing/console-order-detail.png" alt="测试订单的状态、时间和金额" width="440" loading="lazy" />
+<img src="/images/blog/google-play-one-time-purchase-testing/console-order-detail.webp" alt="测试订单的状态、时间和金额" width="1114" loading="lazy" height="1412" />
 
 这笔测试订单在后台显示“已处理”。如果你的订单显示待处理或已退款，可以查看“历史记录”，了解发生了什么。
 
@@ -152,7 +152,7 @@ Google Play 的 Billing SDK 已经提供了商品与价格查询、购买支付�
 
 再进入 **设置 → 常规 → 账号和设备偏好设置 → 国家/地区和个人资料**，查看带勾的当前地区。
 
-<img src="/images/blog/google-play-one-time-purchase-testing/play-country.png" alt="Google Play 账号的国家与地区设置" width="520" loading="lazy" />
+<img src="/images/blog/google-play-one-time-purchase-testing/play-country.webp" alt="Google Play 账号的国家与地区设置" width="1690" loading="lazy" height="931" />
 
 然后回到 Play Console 的 **购买选项和优惠 → 对应购买选项 → 供应情况和定价**，确认该地区有供应，并核对价格。
 

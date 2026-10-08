@@ -89,7 +89,7 @@ const time = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.flo
   .radio-icon-button { border: 0; background: transparent; color: #506346; width: 44px; height: 44px; padding: 11px; display: grid; place-items: center; border-radius: 50%; flex: 0 0 auto; }
   .radio-icon-button:hover, .radio-list-toggle:hover { background: #dce0cf; }
   .radio-mini-play { width: 38px; height: 44px; padding: 9px; }
-  .radio-panel { position: absolute; left: 0; bottom: 0; width: 360px; max-height: calc(100dvh - 48px); overflow-y: auto; overscroll-behavior: contain; padding: 14px 24px 12px; border: 0; border-radius: 20px; background: transparent; }
+  .radio-panel { position: absolute; left: 0; bottom: 0; width: 360px; max-height: calc(100svh - 48px - env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; padding: 14px 24px 12px; border: 0; border-radius: 20px; background: transparent; }
   .radio-heading-row { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; margin: 0 -8px 14px 0; background: var(--color-paper); box-shadow: 0 -16px var(--color-paper); }
   .radio-heading-row h2 { display: flex; align-items: center; gap: 9px; font: 600 16px/1.5 var(--font-serif); letter-spacing: 1.5px; }
   .radio-signal { display: flex; align-items: center; gap: 3px; height: 15px; color: #627643; }
@@ -163,7 +163,7 @@ const time = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.flo
     .field-radio { left: max(12px, env(safe-area-inset-left)); bottom: max(12px, env(safe-area-inset-bottom)); pointer-events: none; }
     .radio-launcher, .radio-panel { pointer-events: auto; }
 
-    .radio-panel { width: min(calc(100vw - 26px - env(safe-area-inset-left) - env(safe-area-inset-right)), 380px); max-height: calc(100dvh - 24px - env(safe-area-inset-bottom)); padding-inline: 22px; }
+    .radio-panel { width: min(calc(100vw - 26px - env(safe-area-inset-left) - env(safe-area-inset-right)), 380px); max-height: calc(100svh - 28px - env(safe-area-inset-bottom)); padding-inline: 22px; }
   }
   .radio-icon-button, .radio-main-play { transition: background .25s, transform .25s var(--ease-out); }
   .radio-main-play:hover { transform: scale(1.06); }

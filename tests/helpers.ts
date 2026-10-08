@@ -68,4 +68,5 @@ export const fitsViewport = async (page: Page) => {
   expect(radio).not.toBeNull();
   expect(radio!.x).toBeGreaterThanOrEqual(0); expect(radio!.y).toBeGreaterThanOrEqual(0);
   expect(radio!.x + radio!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+  expect(radio!.y + radio!.height).toBeLessThanOrEqual(page.viewportSize()!.height + 1);
 };
